@@ -24,12 +24,13 @@ function TeamCard({ cls, name, ids, playersById }) {
             {stats.byPos[pos].map((p) => (
               <div className="team-player" key={p.id}>
                 <span>{p.name}</span>
-                {p.chemistry_style && CHEM_STYLES[p.chemistry_style] && (
-                  <span
-                    className="team-player-chem"
-                    title={`${CHEM_STYLES[p.chemistry_style].label} (${CHEM_STYLES[p.chemistry_style].category})`}
-                  >
-                    {CHEM_STYLES[p.chemistry_style].emoji}
+                {(p.chemistry_styles ?? []).length > 0 && (
+                  <span className="team-player-chem">
+                    {(p.chemistry_styles).map((cs) =>
+                      CHEM_STYLES[cs]
+                        ? <span key={cs} title={`${CHEM_STYLES[cs].label}: ${CHEM_STYLES[cs].description}`}>{CHEM_STYLES[cs].emoji}</span>
+                        : null
+                    )}
                   </span>
                 )}
               </div>

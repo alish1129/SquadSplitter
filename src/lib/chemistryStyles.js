@@ -91,17 +91,25 @@ export const CHEM_STYLES = {
 export const CHEM_STYLE_LIST = Object.entries(CHEM_STYLES).map(([id, meta]) => ({ id, ...meta }));
 export const CHEM_CATEGORIES = ['Attacking', 'Midfield', 'Defending'];
 
-// Effective rating = raw rating boosted by how well the chemistry style
-// matches the player's primary position. Perfect match = +8%.
+// Effective rating = raw rating boosted by how well the assigned chemistry
+// styles match the player's primary position. Each style contributes up to
+// +8%; bonuses are summed and capped at +10% so three weak styles never
+// beat one perfect match by much.
 export function getEffectiveRating(player) {
-  const { rating = 50, chemistry_style: cs, positions } = player;
-  if (!cs || !CHEM_STYLES[cs]) return rating;
+  const { rating = 50, chemistry_styles: styles, positions } = player;
+  if (!styles || styles.length === 0) return rating;
 
   const primaryPos = (positions && positions[0]) || 'FLEX';
   const idealAttrs = POS_ATTRS[primaryPos] ?? [];
-  const styleAttrs = CHEM_STYLES[cs].attrs;
 
-  const matchCount = styleAttrs.filter((a) => idealAttrs.includes(a)).length;
-  const bonus = 0.08 * (matchCount / styleAttrs.length);
+  let totalBonus = 0;
+  for (const cs of styles) {
+    const style = CHEM_STYLES[cs];
+    if (!style) continue;
+    const matchCount = style.attrs.filter((a) => idealAttrs.includes(a)).length;
+    totalBonus += 0.08 * (matchCount / style.attrs.length);
+  }
+
+  const bonus = Math.min(totalBonus, 0.10);
   return Math.round(rating * (1 + bonus) * 10) / 10;
 }

@@ -29,3 +29,12 @@ export function ChemStyleBadge({ chemStyle }) {
     </span>
   );
 }
+
+export function ChemStyleBadges({ chemStyles }) {
+  if (!chemStyles || chemStyles.length === 0) return null;
+  return (
+    <>
+      {chemStyles.map((cs) => <ChemStyleBadge key={cs} chemStyle={cs} />)}
+    </>
+  );
+}

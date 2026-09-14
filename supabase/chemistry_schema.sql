@@ -1,12 +1,6 @@
--- Chemistry styles migration
+-- Chemistry styles migration (v2 — array, up to 3 per player)
 -- Run in Supabase SQL Editor after session_schema.sql.
+-- If you already ran an earlier version of this file see chemistry_styles_v2.sql.
 
 alter table public.players
-  add column if not exists chemistry_style text
-  constraint players_chemistry_style_check check (
-    chemistry_style is null or chemistry_style in (
-      'Hunter','Hawk','Finisher','Deadeye','Marksman','Sniper',
-      'Engine','Catalyst','Artist','Architect',
-      'Shadow','Anchor','Sentinel','Guardian','Powerhouse'
-    )
-  );
+  add column if not exists chemistry_styles text[] not null default '{}';

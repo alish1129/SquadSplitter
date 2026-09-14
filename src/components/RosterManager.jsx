@@ -22,6 +22,47 @@ function PositionToggle({ positions, onToggle }) {
   );
 }
 
+function ChemStylePicker({ selected = [], onToggle }) {
+  const atMax = selected.length >= 3;
+  return (
+    <div className="chem-picker">
+      {CHEM_CATEGORIES.map((cat) => (
+        <div key={cat} className="chem-picker-group">
+          <span className="chem-picker-cat">{cat}</span>
+          <div className="chem-chips">
+            {CHEM_STYLE_LIST.filter((s) => s.category === cat).map((s) => {
+              const active = selected.includes(s.id);
+              return (
+                <button
+                  key={s.id}
+                  type="button"
+                  className={'chem-chip' + (active ? ' active' : '')}
+                  disabled={atMax && !active}
+                  onClick={() => onToggle(s.id)}
+                  title={s.description}
+                  aria-pressed={active}
+                >
+                  {s.emoji} {s.label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      ))}
+      {selected.length > 0 && (
+        <ul className="chem-desc-list">
+          {selected.map((cs) => CHEM_STYLES[cs] && (
+            <li key={cs}>
+              <strong>{CHEM_STYLES[cs].emoji} {CHEM_STYLES[cs].label}:</strong>{' '}
+              {CHEM_STYLES[cs].description}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
 export default function RosterManager({ players }) {
   const [draftRatings, setDraftRatings] = useState({});
   const [pendingPositions, setPendingPositions] = useState([]);
@@ -66,6 +107,16 @@ export default function RosterManager({ players }) {
 
   function removePlayer(player) {
     run(supabase.from('players').delete().eq('id', player.id));
+  }
+
+  function toggleChemStyle(player, styleId) {
+    const current = player.chemistry_styles ?? [];
+    const next = current.includes(styleId)
+      ? current.filter((s) => s !== styleId)
+      : current.length < 3
+        ? [...current, styleId]
+        : current; // already at max
+    run(supabase.from('players').update({ chemistry_styles: next }).eq('id', player.id));
   }
 
   function togglePendingPosition(pos) {
@@ -125,38 +176,13 @@ export default function RosterManager({ players }) {
               />
               <span className="rating-num-display">{draftRatings[p.id] ?? p.rating}</span>
             </span>
-            <select
-              className="chem-select"
-              value={p.chemistry_style || ''}
-              onChange={(e) =>
-                run(
-                  supabase
-                    .from('players')
-                    .update({ chemistry_style: e.target.value || null })
-                    .eq('id', p.id)
-                )
-              }
-              aria-label={`Chemistry style for ${p.name}`}
-            >
-              <option value="">No style</option>
-              {CHEM_CATEGORIES.map((cat) => (
-                <optgroup key={cat} label={cat}>
-                  {CHEM_STYLE_LIST.filter((s) => s.category === cat).map((s) => (
-                    <option key={s.id} value={s.id}>
-                      {s.emoji} {s.label}
-                    </option>
-                  ))}
-                </optgroup>
-              ))}
-            </select>
             <button type="button" className="btn ghost small" onClick={() => removePlayer(p)}>
               Remove
             </button>
-            {p.chemistry_style && CHEM_STYLES[p.chemistry_style] && (
-              <span className="chem-desc">
-                {CHEM_STYLES[p.chemistry_style].description}
-              </span>
-            )}
+            <ChemStylePicker
+              selected={p.chemistry_styles ?? []}
+              onToggle={(styleId) => toggleChemStyle(p, styleId)}
+            />
           </div>
         ))}
         <form className="add-form" onSubmit={addPlayer}>

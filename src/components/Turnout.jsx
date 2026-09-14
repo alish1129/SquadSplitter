@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
-import { PosPill, RatingBadge, ChemStyleBadge } from './shared.jsx';
+import { PosPill, RatingBadge, ChemStyleBadges } from './shared.jsx';
 
 const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
 
@@ -86,7 +86,7 @@ export default function Turnout({ players, session, sessionId, isAdmin, onGenera
               {isSelf && <span className="you-tag" aria-label="This is you">YOU</span>}
               <PosPill positions={p.positions} />
               <RatingBadge rating={p.rating} />
-              <ChemStyleBadge chemStyle={p.chemistry_style} />
+              <ChemStyleBadges chemStyles={p.chemistry_styles} />
             </label>
           );
         })}
