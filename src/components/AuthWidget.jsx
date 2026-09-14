@@ -55,13 +55,15 @@ export default function AuthWidget({ session, profile }) {
       <input
         type="text"
         placeholder="Your name (first time only)"
+        aria-label="Your name (first time only)"
         value={name}
         onChange={(e) => setName(e.target.value)}
         maxLength={40}
       />
       <input
         type="email"
-        placeholder="you@example.com"
+        placeholder="Email address"
+        aria-label="Email address"
         value={email}
         onChange={(e) => setEmail(e.target.value)}
         required

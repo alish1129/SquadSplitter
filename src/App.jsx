@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from './supabaseClient.js';
 import { generateTeams } from './lib/teamBalancer.js';
 import AuthWidget from './components/AuthWidget.jsx';
-import ThemePicker from './components/ThemePicker.jsx';
 import Turnout from './components/Turnout.jsx';
 import Teams from './components/Teams.jsx';
 import RosterManager from './components/RosterManager.jsx';
 import AdminApprovals from './components/AdminApprovals.jsx';
+import ThemePicker from './components/ThemePicker.jsx';
 
 export default function App() {
   const [session, setSession] = useState(null);
@@ -39,7 +39,6 @@ export default function App() {
     setProfile(data || { id: userId, is_admin: false });
   }, []);
 
-  // Auth session
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
@@ -52,7 +51,6 @@ export default function App() {
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
 
-  // Initial data + realtime subscriptions
   useEffect(() => {
     Promise.all([loadPlayers(), loadSplit()]).then(() => setLoaded(true));
 
@@ -82,52 +80,70 @@ export default function App() {
 
   return (
     <>
+      {/* Sticky top bar — theme picker lives here */}
+      <div className="topbar" role="banner">
+        <ThemePicker />
+      </div>
+
+      {/* Hero banner */}
       <div className="hero">
         <div className="hero-row">
           <div>
             <div className="eyebrow">Pickup Soccer</div>
             <h1>Squad Split</h1>
-            <p>Mark who’s in for this week, then split into two fair teams by skill and position.</p>
+            <p>Mark who's in for this week, then split into two fair teams by skill and position.</p>
           </div>
-          <div className="hero-side">
-            <AuthWidget session={session} profile={profile} />
-            <ThemePicker />
-          </div>
+          <AuthWidget session={session} profile={profile} />
         </div>
       </div>
 
-      <div style={{ paddingTop: 8 }}>
-        {globalError && <p className="error-note">{globalError}</p>}
-        {!loaded ? (
-          <p className="empty-note">Loading…</p>
-        ) : (
-          <>
-            <Turnout
-              players={players}
-              session={session}
-              isAdmin={isAdmin}
-              onGenerate={handleGenerate}
-              generating={generating}
-            />
-            <Teams
-              split={split}
-              players={players}
-              playersById={playersById}
-              onGenerate={handleGenerate}
-              isAdmin={isAdmin}
-              generating={generating}
-            />
-            {isAdmin && <RosterManager players={players} />}
-            {isAdmin && <AdminApprovals selfId={session?.user?.id} />}
-            {!session && (
-              <p className="empty-note">
-                Sign in above to mark yourself IN for the week. Ask an existing admin to promote you if
-                you need to manage ratings and the roster.
-              </p>
-            )}
-          </>
-        )}
-      </div>
+      {globalError && <p className="error-note col-full">{globalError}</p>}
+
+      {!loaded ? (
+        <p className="empty-note" aria-live="polite">Loading…</p>
+      ) : (
+        <>
+          <div className="main-grid">
+            {/* Left column: who's in */}
+            <div>
+              <Turnout
+                players={players}
+                session={session}
+                isAdmin={isAdmin}
+                onGenerate={handleGenerate}
+                generating={generating}
+              />
+            </div>
+
+            {/* Right column: team split */}
+            <div>
+              <Teams
+                split={split}
+                players={players}
+                playersById={playersById}
+                onGenerate={handleGenerate}
+                isAdmin={isAdmin}
+                generating={generating}
+              />
+            </div>
+          </div>
+
+          {/* Admin sections — full width below the grid */}
+          {isAdmin && (
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <RosterManager players={players} />
+              <AdminApprovals selfId={session?.user?.id} />
+            </div>
+          )}
+
+          {!session && (
+            <p className="empty-note" style={{ marginTop: 8 }}>
+              Sign in above to mark yourself IN for the week. Ask an existing admin to promote you if
+              you need to manage ratings and the roster.
+            </p>
+          )}
+        </>
+      )}
     </>
   );
 }

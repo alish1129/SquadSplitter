@@ -92,11 +92,11 @@ export default function ThemePicker() {
   return (
     <div ref={ref} className="theme-picker">
       <button
-        className="btn ghost small theme-trigger"
+        className="theme-trigger"
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="listbox"
         aria-expanded={open}
-        title="Change theme"
+        aria-label="Change colour theme"
       >
         <span className="theme-dot-sm" style={{ background: current.dot }} />
         {current.label}
