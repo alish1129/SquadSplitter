@@ -5,19 +5,31 @@ import { CHEM_STYLE_LIST, CHEM_CATEGORIES, CHEM_STYLES } from '../lib/chemistryS
 
 const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
 
+// FLEX = any outfield position — incompatible with GK
+function posConflict(pos, current) {
+  return (pos === 'FLEX' && current.includes('GK')) ||
+         (pos === 'GK'   && current.includes('FLEX'));
+}
+
 function PositionToggle({ positions, onToggle }) {
   return (
     <div className="pos-toggle">
-      {POSITIONS.map((pos) => (
-        <button
-          key={pos}
-          type="button"
-          className={'pos-chip' + (positions.includes(pos) ? ' active' : '')}
-          onClick={() => onToggle(pos)}
-        >
-          {POS_LABEL[pos]}
-        </button>
-      ))}
+      {POSITIONS.map((pos) => {
+        const active = positions.includes(pos);
+        const conflicts = !active && posConflict(pos, positions);
+        return (
+          <button
+            key={pos}
+            type="button"
+            className={'pos-chip' + (active ? ' active' : '')}
+            onClick={() => onToggle(pos)}
+            disabled={conflicts}
+            title={conflicts ? 'FLEX and GK cannot be combined' : undefined}
+          >
+            {POS_LABEL[pos]}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -87,10 +99,11 @@ export default function RosterManager({ players }) {
     const current = player.positions;
     let next;
     if (current.includes(pos)) {
-      if (current.length <= 1) return; // keep at least one
+      if (current.length <= 1) return;
       next = current.filter((p) => p !== pos);
     } else {
-      if (current.length >= 2) return; // at most two
+      if (current.length >= 2) return;
+      if (posConflict(pos, current)) return;
       next = [...current, pos];
     }
     run(supabase.from('players').update({ positions: next }).eq('id', player.id));
@@ -123,6 +136,7 @@ export default function RosterManager({ players }) {
     setPendingPositions((prev) => {
       if (prev.includes(pos)) return prev.filter((p) => p !== pos);
       if (prev.length >= 2) return prev;
+      if (posConflict(pos, prev)) return prev;
       return [...prev, pos];
     });
   }
