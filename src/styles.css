@@ -417,6 +417,61 @@ button { font-family: inherit; cursor: pointer; }
 .btn.danger { background: transparent; color: var(--danger); border-color: var(--border); }
 .btn.small { padding: 7px 13px; font-size: 0.8rem; border-radius: 8px; }
 
+/* ── Session picker ─────────────────────────────────────────── */
+.session-bar { margin-bottom: 20px; }
+.session-bar-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.session-info { min-width: 0; }
+.session-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  margin-bottom: 2px;
+}
+.session-date-display {
+  font-family: 'Oswald', sans-serif;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text);
+  letter-spacing: 0.01em;
+}
+.session-form {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 14px;
+  margin-top: 2px;
+  border-top: 1px solid var(--border);
+}
+.session-form input[type='date'] {
+  font-family: inherit;
+  font-size: 0.88rem;
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 2px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  cursor: pointer;
+}
+.session-form input[type='date']:focus-visible {
+  outline: 3px solid var(--accent);
+  outline-offset: 2px;
+}
+.session-toast {
+  font-size: 0.85rem;
+  color: var(--accent);
+  font-weight: 600;
+  padding-top: 6px;
+}
+
 /* ── Main content grid ──────────────────────────────────────── */
 .main-grid {
   display: grid;
@@ -555,6 +610,9 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
   .main-grid { grid-template-columns: 1fr; gap: 16px; }
   .teams-grid { grid-template-columns: 1fr; }
   .theme-dropdown { right: auto; left: 0; }
+  .session-bar-row { flex-direction: column; align-items: flex-start; }
+  .session-form { flex-direction: column; align-items: stretch; }
+  .session-form input[type='date'] { width: 100%; }
 }
 
 @media (max-width: 420px) {

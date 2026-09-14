@@ -4,7 +4,7 @@ import { PosPill, RatingBadge } from './shared.jsx';
 
 const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
 
-export default function Turnout({ players, session, isAdmin, onGenerate, generating }) {
+export default function Turnout({ players, session, sessionId, isAdmin, onGenerate, generating }) {
   const [toggling, setToggling] = useState(null);
   const [error, setError] = useState('');
 
@@ -22,12 +22,28 @@ export default function Turnout({ players, session, isAdmin, onGenerate, generat
   async function toggle(player, nextValue) {
     setError('');
     setToggling(player.id);
+
     const isSelf = session && player.user_id === session.user.id;
-    const { error: rpcError } = isAdmin
-      ? await supabase.from('players').update({ is_in: nextValue }).eq('id', player.id)
-      : isSelf
-        ? await supabase.rpc('toggle_my_in', { target_player_id: player.id, new_value: nextValue })
-        : { error: { message: 'Sign in to mark yourself IN.' } };
+
+    let rpcError;
+    if (isAdmin) {
+      // Admin: directly upsert into session_turnout
+      const { error: err } = await supabase
+        .from('session_turnout')
+        .upsert({ session_id: sessionId, player_id: player.id, is_in: nextValue });
+      rpcError = err;
+    } else if (isSelf) {
+      // Member: use security-definer RPC that only allows own row
+      const { error: err } = await supabase.rpc('toggle_session_in', {
+        p_session_id: sessionId,
+        p_player_id: player.id,
+        p_value: nextValue,
+      });
+      rpcError = err;
+    } else {
+      rpcError = { message: 'Sign in to mark yourself IN.' };
+    }
+
     setToggling(null);
     if (rpcError) setError(rpcError.message);
   }
@@ -36,7 +52,7 @@ export default function Turnout({ players, session, isAdmin, onGenerate, generat
     return (
       <div className="card">
         <div className="card-head">
-          <h2>This week’s turnout</h2>
+          <h2>This week's turnout</h2>
         </div>
         <p className="empty-note">
           Nobody on the roster yet. Sign in to add yourself, or ask an admin to add the group.
@@ -48,7 +64,7 @@ export default function Turnout({ players, session, isAdmin, onGenerate, generat
   return (
     <div className="card">
       <div className="card-head">
-        <h2>This week’s turnout</h2>
+        <h2>Who's in?</h2>
         <span className="count-badge">
           {inCount} of {players.length} IN
         </span>
@@ -64,18 +80,25 @@ export default function Turnout({ players, session, isAdmin, onGenerate, generat
                 checked={p.is_in}
                 disabled={!canToggle || toggling === p.id}
                 onChange={(e) => toggle(p, e.target.checked)}
+                aria-label={`${p.name} — mark ${p.is_in ? 'out' : 'in'}`}
               />
               <span className="name">{p.name}</span>
-              {isSelf && <span className="you-tag">YOU</span>}
+              {isSelf && <span className="you-tag" aria-label="This is you">YOU</span>}
               <PosPill positions={p.positions} />
               <RatingBadge rating={p.rating} />
             </label>
           );
         })}
       </div>
-      {error && <p className="error-note">{error}</p>}
+      {error && <p className="error-note" role="alert">{error}</p>}
       <div className="actions-row">
-        <button type="button" className="btn" disabled={!canGenerate || !isAdmin} onClick={onGenerate}>
+        <button
+          type="button"
+          className="btn"
+          disabled={!canGenerate || !isAdmin}
+          onClick={onGenerate}
+          aria-label={generating ? 'Splitting teams…' : 'Generate team split'}
+        >
           {generating ? 'Splitting…' : '⚽ Generate teams'}
         </button>
         {!canGenerate && <span className="muted">Need at least 2 players IN</span>}

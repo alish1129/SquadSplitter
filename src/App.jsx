@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback } from 'react';
+import { useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import { supabase } from './supabaseClient.js';
 import { generateTeams } from './lib/teamBalancer.js';
 import AuthWidget from './components/AuthWidget.jsx';
@@ -7,139 +7,244 @@ import Teams from './components/Teams.jsx';
 import RosterManager from './components/RosterManager.jsx';
 import AdminApprovals from './components/AdminApprovals.jsx';
 import ThemePicker from './components/ThemePicker.jsx';
+import SessionPicker from './components/SessionPicker.jsx';
+
+// ── URL helpers ──────────────────────────────────────────────
+function getDateParam() {
+  return new URLSearchParams(window.location.search).get('date') ?? null;
+}
+function pushDateParam(dateStr) {
+  const url = new URL(window.location);
+  if (dateStr) url.searchParams.set('date', dateStr);
+  else url.searchParams.delete('date');
+  window.history.pushState({}, '', url);
+}
 
 export default function App() {
-  const [session, setSession] = useState(null);
+  // Auth
+  const [authSession, setAuthSession] = useState(null);
   const [profile, setProfile] = useState(null);
+
+  // Roster
   const [players, setPlayers] = useState([]);
-  const [split, setSplit] = useState(null);
+
+  // Game session
+  const [gameSession, setGameSession] = useState(null);   // {id, session_date, …}
+  const [turnoutMap, setTurnoutMap] = useState({});        // { player_id → is_in }
+  const [split, setSplit] = useState(null);                // {team_a, team_b}
+
   const [loaded, setLoaded] = useState(false);
   const [generating, setGenerating] = useState(false);
   const [globalError, setGlobalError] = useState('');
+  const realtimeRef = useRef(null);
 
+  // ── Data loaders ─────────────────────────────────────────
   const loadPlayers = useCallback(async () => {
     const { data, error } = await supabase.from('players').select('*').order('name');
     if (error) setGlobalError(error.message);
-    else setPlayers(data);
+    else setPlayers(data ?? []);
   }, []);
 
-  const loadSplit = useCallback(async () => {
-    const { data, error } = await supabase.from('current_split').select('*').eq('id', 1).maybeSingle();
-    if (error) setGlobalError(error.message);
-    else setSplit(data);
+  const loadTurnout = useCallback(async (sessionId) => {
+    const { data } = await supabase
+      .from('session_turnout')
+      .select('player_id, is_in')
+      .eq('session_id', sessionId);
+    setTurnoutMap(Object.fromEntries((data ?? []).map((t) => [t.player_id, t.is_in])));
   }, []);
+
+  const loadSplit = useCallback(async (sessionId) => {
+    const { data } = await supabase
+      .from('splits')
+      .select('*')
+      .eq('session_id', sessionId)
+      .maybeSingle();
+    setSplit(data ?? null);
+  }, []);
+
+  const loadGameSession = useCallback(async (dateStr) => {
+    const q = supabase.from('sessions').select('*');
+    const { data } = dateStr
+      ? await q.eq('session_date', dateStr).maybeSingle()
+      : await q.order('session_date', { ascending: false }).limit(1).maybeSingle();
+    return data ?? null;
+  }, []);
+
+  const subscribeSession = useCallback((sessionId) => {
+    if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+    realtimeRef.current = supabase
+      .channel(`game-session-${sessionId}`)
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'session_turnout',
+        filter: `session_id=eq.${sessionId}`,
+      }, () => loadTurnout(sessionId))
+      .on('postgres_changes', {
+        event: '*', schema: 'public', table: 'splits',
+        filter: `session_id=eq.${sessionId}`,
+      }, () => loadSplit(sessionId))
+      .subscribe();
+  }, [loadTurnout, loadSplit]);
 
   const loadProfile = useCallback(async (userId) => {
-    if (!userId) {
-      setProfile(null);
-      return;
-    }
-    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).maybeSingle();
+    if (!userId) { setProfile(null); return; }
+    const { data, error } = await supabase
+      .from('profiles').select('*').eq('id', userId).maybeSingle();
     if (error) setGlobalError(error.message);
-    setProfile(data || { id: userId, is_admin: false });
+    setProfile(data ?? { id: userId, is_admin: false });
   }, []);
 
+  // ── Boot ─────────────────────────────────────────────────
+  useEffect(() => {
+    async function boot() {
+      await loadPlayers();
+      const gs = await loadGameSession(getDateParam());
+      if (gs) {
+        setGameSession(gs);
+        await Promise.all([loadTurnout(gs.id), loadSplit(gs.id)]);
+        subscribeSession(gs.id);
+      }
+      setLoaded(true);
+    }
+    boot();
+
+    // Players realtime (roster & rating changes)
+    const playersCh = supabase
+      .channel('roster-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, loadPlayers)
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(playersCh);
+      if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ── Auth ─────────────────────────────────────────────────
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
-      setSession(data.session);
+      setAuthSession(data.session);
       loadProfile(data.session?.user?.id);
     });
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      loadProfile(newSession?.user?.id);
+    const { data: sub } = supabase.auth.onAuthStateChange((_ev, s) => {
+      setAuthSession(s);
+      loadProfile(s?.user?.id);
     });
     return () => sub.subscription.unsubscribe();
   }, [loadProfile]);
 
-  useEffect(() => {
-    Promise.all([loadPlayers(), loadSplit()]).then(() => setLoaded(true));
+  // ── Navigate to a date ───────────────────────────────────
+  async function navigateToDate(dateStr) {
+    pushDateParam(dateStr);
+    const gs = await loadGameSession(dateStr);
+    setGameSession(gs);
+    setSplit(null);
+    setTurnoutMap({});
+    if (gs) {
+      await Promise.all([loadTurnout(gs.id), loadSplit(gs.id)]);
+      subscribeSession(gs.id);
+    }
+  }
 
-    const channel = supabase
-      .channel('squad-split-changes')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, loadPlayers)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'current_split' }, loadSplit)
-      .subscribe();
-
-    return () => supabase.removeChannel(channel);
-  }, [loadPlayers, loadSplit]);
-
+  // ── Derived state ─────────────────────────────────────────
   const isAdmin = !!profile?.is_admin;
-  const playersById = useMemo(() => Object.fromEntries(players.map((p) => [p.id, p])), [players]);
 
+  // Merge roster with this session's turnout
+  const playersWithTurnout = useMemo(
+    () => players.map((p) => ({ ...p, is_in: turnoutMap[p.id] ?? false })),
+    [players, turnoutMap]
+  );
+
+  const playersById = useMemo(
+    () => Object.fromEntries(players.map((p) => [p.id, p])),
+    [players]
+  );
+
+  // ── Generate teams ────────────────────────────────────────
   async function handleGenerate() {
-    const inPlayers = players.filter((p) => p.is_in);
+    if (!gameSession) return;
+    const inPlayers = playersWithTurnout.filter((p) => p.is_in);
     if (inPlayers.length < 2) return;
     setGenerating(true);
     const { team_a, team_b } = generateTeams(inPlayers);
     const { error } = await supabase
-      .from('current_split')
-      .upsert({ id: 1, team_a, team_b, generated_at: new Date().toISOString() });
+      .from('splits')
+      .upsert({ session_id: gameSession.id, team_a, team_b, generated_at: new Date().toISOString() });
     setGenerating(false);
     if (error) setGlobalError(error.message);
   }
 
+  // ── Render ────────────────────────────────────────────────
   return (
     <>
-      {/* Sticky top bar — theme picker lives here */}
       <div className="topbar" role="banner">
         <ThemePicker />
       </div>
 
-      {/* Hero banner */}
       <div className="hero">
         <div className="hero-row">
           <div>
             <div className="eyebrow">Pickup Soccer</div>
             <h1>Squad Split</h1>
-            <p>Mark who's in for this week, then split into two fair teams by skill and position.</p>
+            <p>Mark who's in, then split into two fair teams by skill and position.</p>
           </div>
-          <AuthWidget session={session} profile={profile} />
+          <AuthWidget session={authSession} profile={profile} />
         </div>
       </div>
 
-      {globalError && <p className="error-note col-full">{globalError}</p>}
+      {globalError && <p className="error-note" role="alert">{globalError}</p>}
 
       {!loaded ? (
         <p className="empty-note" aria-live="polite">Loading…</p>
       ) : (
         <>
-          <div className="main-grid">
-            {/* Left column: who's in */}
-            <div>
-              <Turnout
-                players={players}
-                session={session}
-                isAdmin={isAdmin}
-                onGenerate={handleGenerate}
-                generating={generating}
-              />
-            </div>
+          <SessionPicker
+            gameSession={gameSession}
+            isAdmin={isAdmin}
+            onNavigate={navigateToDate}
+          />
 
-            {/* Right column: team split */}
-            <div>
-              <Teams
-                split={split}
-                players={players}
-                playersById={playersById}
-                onGenerate={handleGenerate}
-                isAdmin={isAdmin}
-                generating={generating}
-              />
-            </div>
-          </div>
-
-          {/* Admin sections — full width below the grid */}
-          {isAdmin && (
-            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
-              <RosterManager players={players} />
-              <AdminApprovals selfId={session?.user?.id} />
+          {!gameSession ? (
+            <p className="empty-note">
+              {isAdmin
+                ? 'Pick a date above to create or open a session, then share the link with your group.'
+                : 'No session is open yet. Ask an admin to create one and send you the link.'}
+            </p>
+          ) : (
+            <div className="main-grid">
+              <div>
+                <Turnout
+                  players={playersWithTurnout}
+                  session={authSession}
+                  sessionId={gameSession.id}
+                  isAdmin={isAdmin}
+                  onGenerate={handleGenerate}
+                  generating={generating}
+                />
+              </div>
+              <div>
+                <Teams
+                  split={split}
+                  players={playersWithTurnout}
+                  playersById={playersById}
+                  onGenerate={handleGenerate}
+                  isAdmin={isAdmin}
+                  generating={generating}
+                />
+              </div>
             </div>
           )}
 
-          {!session && (
+          {isAdmin && (
+            <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <RosterManager players={players} />
+              <AdminApprovals selfId={authSession?.user?.id} />
+            </div>
+          )}
+
+          {!authSession && (
             <p className="empty-note" style={{ marginTop: 8 }}>
-              Sign in above to mark yourself IN for the week. Ask an existing admin to promote you if
-              you need to manage ratings and the roster.
+              Sign in above to mark yourself IN. Ask an existing admin to promote you if you need to
+              manage ratings and the roster.
             </p>
           )}
         </>
