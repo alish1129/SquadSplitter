@@ -19,11 +19,11 @@ export function RatingBadge({ rating }) {
 
 export function ChemStyleBadge({ chemStyle }) {
   if (!chemStyle || !CHEM_STYLES[chemStyle]) return null;
-  const { emoji, label, category } = CHEM_STYLES[chemStyle];
+  const { emoji, label, category, description } = CHEM_STYLES[chemStyle];
   return (
     <span
       className={`chem-badge chem-${category.toLowerCase()}`}
-      title={`${label} — ${category}`}
+      title={`${label} (${category}): ${description}`}
     >
       {emoji} {label}
     </span>

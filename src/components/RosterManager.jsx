@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { POSITIONS, POS_LABEL } from '../lib/teamBalancer.js';
-import { CHEM_STYLE_LIST, CHEM_CATEGORIES } from '../lib/chemistryStyles.js';
+import { CHEM_STYLE_LIST, CHEM_CATEGORIES, CHEM_STYLES } from '../lib/chemistryStyles.js';
 
 const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
 
@@ -152,6 +152,11 @@ export default function RosterManager({ players }) {
             <button type="button" className="btn ghost small" onClick={() => removePlayer(p)}>
               Remove
             </button>
+            {p.chemistry_style && CHEM_STYLES[p.chemistry_style] && (
+              <span className="chem-desc">
+                {CHEM_STYLES[p.chemistry_style].description}
+              </span>
+            )}
           </div>
         ))}
         <form className="add-form" onSubmit={addPlayer}>

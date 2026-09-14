@@ -628,6 +628,10 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
   cursor: pointer; flex: none;
 }
 .chem-select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+.chem-desc {
+  flex: 1 0 100%; font-size: .75rem; color: var(--text-muted);
+  padding: 2px 2px 0; line-height: 1.4;
+}
 
 .team-player-chem { font-size: .9rem; flex: none; opacity: .85; }
 
