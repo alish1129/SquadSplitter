@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
+import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
 function TeamCard({ cls, name, ids, playersById }) {
   const stats = computeTeamStats(ids, playersById);
@@ -23,6 +24,14 @@ function TeamCard({ cls, name, ids, playersById }) {
             {stats.byPos[pos].map((p) => (
               <div className="team-player" key={p.id}>
                 <span>{p.name}</span>
+                {p.chemistry_style && CHEM_STYLES[p.chemistry_style] && (
+                  <span
+                    className="team-player-chem"
+                    title={`${CHEM_STYLES[p.chemistry_style].label} (${CHEM_STYLES[p.chemistry_style].category})`}
+                  >
+                    {CHEM_STYLES[p.chemistry_style].emoji}
+                  </span>
+                )}
               </div>
             ))}
           </div>

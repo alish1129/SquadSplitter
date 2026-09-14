@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { POSITIONS, POS_LABEL } from '../lib/teamBalancer.js';
+import { CHEM_STYLE_LIST, CHEM_CATEGORIES } from '../lib/chemistryStyles.js';
 
 const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
 
@@ -124,6 +125,30 @@ export default function RosterManager({ players }) {
               />
               <span className="rating-num-display">{draftRatings[p.id] ?? p.rating}</span>
             </span>
+            <select
+              className="chem-select"
+              value={p.chemistry_style || ''}
+              onChange={(e) =>
+                run(
+                  supabase
+                    .from('players')
+                    .update({ chemistry_style: e.target.value || null })
+                    .eq('id', p.id)
+                )
+              }
+              aria-label={`Chemistry style for ${p.name}`}
+            >
+              <option value="">No style</option>
+              {CHEM_CATEGORIES.map((cat) => (
+                <optgroup key={cat} label={cat}>
+                  {CHEM_STYLE_LIST.filter((s) => s.category === cat).map((s) => (
+                    <option key={s.id} value={s.id}>
+                      {s.emoji} {s.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
+            </select>
             <button type="button" className="btn ghost small" onClick={() => removePlayer(p)}>
               Remove
             </button>

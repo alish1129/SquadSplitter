@@ -1,13 +1,11 @@
+import { getEffectiveRating } from './chemistryStyles.js';
+
 export const POSITIONS = ['GK', 'DEF', 'MID', 'FWD', 'FLEX'];
 export const POS_LABEL = { GK: 'GK', DEF: 'DEF', MID: 'MID', FWD: 'FWD', FLEX: 'FLEX' };
 
-/**
- * Split `players` (already filtered to is_in === true) into two teams that
- * are close in total rating and in position mix: group by each player's
- * primary (first-listed) position, sort each group by rating descending,
- * then hand each player to whichever team currently has the lower total
- * rating (alternating on exact ties).
- */
+// Split `players` (already filtered to is_in === true) into two balanced teams.
+// Groups by primary position, sorts by effective rating (raw + chemistry style
+// bonus), then greedily assigns each player to the lower-total team.
 export function generateTeams(players) {
   const groups = {};
   POSITIONS.forEach((pos) => {
@@ -25,8 +23,11 @@ export function generateTeams(players) {
   let flip = false;
 
   POSITIONS.forEach((pos) => {
-    const arr = [...groups[pos]].sort((a, b) => b.rating - a.rating || Math.random() - 0.5);
+    const arr = [...groups[pos]].sort(
+      (a, b) => getEffectiveRating(b) - getEffectiveRating(a) || Math.random() - 0.5
+    );
     arr.forEach((p) => {
+      const eff = getEffectiveRating(p);
       let toA;
       if (sumA < sumB) toA = true;
       else if (sumB < sumA) toA = false;
@@ -36,10 +37,10 @@ export function generateTeams(players) {
       }
       if (toA) {
         teamA.push(p.id);
-        sumA += p.rating;
+        sumA += eff;
       } else {
         teamB.push(p.id);
-        sumB += p.rating;
+        sumB += eff;
       }
     });
   });
