@@ -1,3 +1,4 @@
+/* ── Default Light ─────────────────────────────────────────── */
 :root {
   --bg: #edf1ec;
   --surface: #ffffff;
@@ -15,11 +16,17 @@
   --shirts-strong: #172c52;
   --danger: #b3392c;
   --shadow: 0 1px 2px rgba(20, 30, 20, 0.06), 0 8px 20px -12px rgba(20, 30, 20, 0.18);
+  /* hero gradient */
+  --hero-from: #124a29;
+  --hero-to: #1e6b3d;
+  --hero-text: #f4fbf6;
   color-scheme: light;
 }
 
+/* ── System Dark (OS preference) ───────────────────────────── */
 @media (prefers-color-scheme: dark) {
-  :root:not([data-theme='light']) {
+  /* Only applies when no explicit data-theme is set */
+  :root:not([data-theme]) {
     --bg: #10160f;
     --surface: #182019;
     --surface-2: #1e2820;
@@ -36,9 +43,14 @@
     --shirts-strong: #9db9ea;
     --danger: #e38578;
     --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+    --hero-from: #0f3a1f;
+    --hero-to: #1e5030;
+    --hero-text: #eaf0e9;
     color-scheme: dark;
   }
 }
+
+/* ── Explicit Dark ──────────────────────────────────────────── */
 :root[data-theme='dark'] {
   --bg: #10160f;
   --surface: #182019;
@@ -56,8 +68,137 @@
   --shirts-strong: #9db9ea;
   --danger: #e38578;
   --shadow: 0 1px 2px rgba(0, 0, 0, 0.3), 0 10px 24px -14px rgba(0, 0, 0, 0.5);
+  --hero-from: #0f3a1f;
+  --hero-to: #1e5030;
+  --hero-text: #eaf0e9;
   color-scheme: dark;
 }
+
+/* ── EA FC24 ────────────────────────────────────────────────── */
+:root[data-theme='fc24'] {
+  --bg: #0D1117;
+  --surface: #161B22;
+  --surface-2: #1C2229;
+  --surface-3: #21272F;
+  --text: #E6EDF3;
+  --text-muted: #7D8590;
+  --border: #30363D;
+  --accent: #00D471;
+  --accent-strong: #00FF87;
+  --on-accent: #050D10;
+  --pinnie: #FF6B35;
+  --pinnie-strong: #FF9068;
+  --shirts: #4D9EFF;
+  --shirts-strong: #80BDFF;
+  --danger: #FF5C5C;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 10px 24px -14px rgba(0, 212, 113, 0.15);
+  --hero-from: #060C16;
+  --hero-to: #0D1827;
+  --hero-text: #E6EDF3;
+  color-scheme: dark;
+}
+
+/* ── FIFA World Cup 2022 · Qatar ────────────────────────────── */
+/* Official palette: maroon #8B1535, gold #C9A84C, white       */
+:root[data-theme='wc2022'] {
+  --bg: #0D070F;
+  --surface: #1A0D1E;
+  --surface-2: #221427;
+  --surface-3: #2C1B31;
+  --text: #F5E8F0;
+  --text-muted: #9A7FA0;
+  --border: #3D2045;
+  --accent: #C9A84C;
+  --accent-strong: #E8C870;
+  --on-accent: #0D070F;
+  --pinnie: #8B1535;
+  --pinnie-strong: #C0285A;
+  --shirts: #C9A84C;
+  --shirts-strong: #E8C870;
+  --danger: #E85C6C;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 10px 24px -14px rgba(201, 168, 76, 0.18);
+  --hero-from: #200826;
+  --hero-to: #0D0712;
+  --hero-text: #F5E8F0;
+  color-scheme: dark;
+}
+
+/* ── FIFA World Cup 2018 · Russia ───────────────────────────── */
+/* Official palette: red #CC0A2A, blue #003087, white          */
+:root[data-theme='wc2018'] {
+  --bg: #070B18;
+  --surface: #101828;
+  --surface-2: #172136;
+  --surface-3: #1E2A44;
+  --text: #E8ECF8;
+  --text-muted: #8896AA;
+  --border: #243258;
+  --accent: #CC0A2A;
+  --accent-strong: #E82040;
+  --on-accent: #FFFFFF;
+  --pinnie: #CC0A2A;
+  --pinnie-strong: #FF4060;
+  --shirts: #4470CC;
+  --shirts-strong: #7098E8;
+  --danger: #FF6B6B;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.6), 0 10px 24px -14px rgba(204, 10, 42, 0.18);
+  --hero-from: #06091A;
+  --hero-to: #0C1432;
+  --hero-text: #E8ECF8;
+  color-scheme: dark;
+}
+
+/* ── FIFA World Cup 2014 · Brazil ───────────────────────────── */
+/* Official palette: green #009B3A, yellow #FEDF00, blue #002776 */
+:root[data-theme='wc2014'] {
+  --bg: #091A0A;
+  --surface: #112211;
+  --surface-2: #172C17;
+  --surface-3: #1D361D;
+  --text: #F0F8E8;
+  --text-muted: #88A882;
+  --border: #2A4A2A;
+  --accent: #F5C800;
+  --accent-strong: #FFD830;
+  --on-accent: #091A0A;
+  --pinnie: #F5C800;
+  --pinnie-strong: #FFD830;
+  --shirts: #009B3A;
+  --shirts-strong: #12CC52;
+  --danger: #E86055;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 10px 24px -14px rgba(245, 200, 0, 0.18);
+  --hero-from: #071507;
+  --hero-to: #0E240E;
+  --hero-text: #F0F8E8;
+  color-scheme: dark;
+}
+
+/* ── FIFA World Cup 2010 · South Africa ─────────────────────── */
+/* Official palette: green #007749, gold #FFB81C, black         */
+:root[data-theme='wc2010'] {
+  --bg: #081508;
+  --surface: #101E10;
+  --surface-2: #162618;
+  --surface-3: #1C301E;
+  --text: #EDF5E0;
+  --text-muted: #88A880;
+  --border: #264428;
+  --accent: #FFB81C;
+  --accent-strong: #FFD050;
+  --on-accent: #081508;
+  --pinnie: #FFB81C;
+  --pinnie-strong: #FFD050;
+  --shirts: #007749;
+  --shirts-strong: #12AA6A;
+  --danger: #E86050;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.5), 0 10px 24px -14px rgba(255, 184, 28, 0.18);
+  --hero-from: #051005;
+  --hero-to: #0C1E0C;
+  --hero-text: #EDF5E0;
+  color-scheme: dark;
+}
+
+/* ────────────────────────────────────────────────────────────── */
 
 * { box-sizing: border-box; }
 body { margin: 0; background: var(--bg); color: var(--text); }
@@ -80,16 +221,17 @@ h1, h2, h3 {
   margin: 0 -20px 28px;
   padding: 32px 20px 24px;
   background-image:
-    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.05) 0 26px, rgba(0, 0, 0, 0.035) 26px 52px),
-    linear-gradient(180deg, var(--accent-strong), var(--accent));
-  color: var(--on-accent);
+    repeating-linear-gradient(115deg, rgba(255, 255, 255, 0.04) 0 26px, rgba(0, 0, 0, 0.04) 26px 52px),
+    linear-gradient(180deg, var(--hero-from), var(--hero-to));
+  color: var(--hero-text);
 }
 .hero-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; flex-wrap: wrap; }
-.hero h1 { font-size: clamp(1.6rem, 4vw, 2.1rem); color: var(--on-accent); text-transform: uppercase; }
-.hero p { margin: 6px 0 0; color: var(--on-accent); opacity: 0.88; max-width: 52ch; font-size: 0.95rem; }
+.hero-side { display: flex; flex-direction: column; align-items: flex-end; gap: 10px; }
+.hero h1 { font-size: clamp(1.6rem, 4vw, 2.1rem); color: var(--hero-text); text-transform: uppercase; }
+.hero p { margin: 6px 0 0; color: var(--hero-text); opacity: 0.88; max-width: 52ch; font-size: 0.95rem; }
 .eyebrow {
   font-family: 'Oswald', sans-serif; font-weight: 600; text-transform: uppercase;
-  letter-spacing: 0.14em; font-size: 0.72rem; color: var(--on-accent); opacity: 0.75;
+  letter-spacing: 0.14em; font-size: 0.72rem; color: var(--hero-text); opacity: 0.75;
 }
 
 .auth-widget { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
@@ -97,16 +239,52 @@ h1, h2, h3 {
 .auth-form input {
   font-family: inherit; font-size: 0.85rem; padding: 8px 10px; border-radius: 8px;
   border: 1px solid rgba(255, 255, 255, 0.4); background: rgba(255, 255, 255, 0.12);
-  color: var(--on-accent); min-width: 150px;
+  color: var(--hero-text); min-width: 150px;
 }
-.auth-form input::placeholder { color: rgba(244, 251, 246, 0.65); }
+.auth-form input::placeholder { color: rgba(244, 251, 246, 0.55); }
 .status-pill {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.04em; text-transform: uppercase;
-  padding: 6px 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.18);
-  color: var(--on-accent); white-space: nowrap; border: 1px solid rgba(255, 255, 255, 0.3);
+  padding: 6px 12px; border-radius: 99px; background: rgba(255, 255, 255, 0.15);
+  color: var(--hero-text); white-space: nowrap; border: 1px solid rgba(255, 255, 255, 0.25);
 }
-.admin-badge { background: var(--on-accent); color: var(--accent-strong); }
+.admin-badge { background: rgba(255, 255, 255, 0.9); color: var(--accent-strong); }
 
+/* ── Theme Picker ──────────────────────────────────────────── */
+.theme-picker { position: relative; }
+.theme-trigger {
+  display: inline-flex; align-items: center; gap: 6px;
+  background: rgba(255, 255, 255, 0.12); border-color: rgba(255, 255, 255, 0.22);
+  color: var(--hero-text); font-size: 0.76rem; padding: 5px 10px;
+}
+.theme-trigger:hover { background: rgba(255, 255, 255, 0.2); }
+.theme-dot-sm {
+  width: 12px; height: 12px; border-radius: 50%; flex: none;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+.theme-dropdown {
+  position: absolute; right: 0; top: calc(100% + 8px);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: 14px; padding: 6px; min-width: 210px;
+  box-shadow: var(--shadow), 0 8px 32px rgba(0, 0, 0, 0.25);
+  z-index: 200; display: flex; flex-direction: column; gap: 2px;
+}
+.theme-option {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 8px; border: none;
+  background: transparent; color: var(--text); text-align: left;
+  cursor: pointer; width: 100%; font-family: inherit;
+}
+.theme-option:hover { background: var(--surface-2); }
+.theme-option.active { background: var(--surface-3); }
+.theme-dot-lg {
+  width: 22px; height: 22px; border-radius: 50%; flex: none;
+  border: 2px solid rgba(128, 128, 128, 0.2);
+}
+.theme-option-text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.theme-option-label { font-size: 0.83rem; font-weight: 700; line-height: 1.2; }
+.theme-option-sub { font-size: 0.7rem; color: var(--text-muted); }
+
+/* ── Cards & Layout ────────────────────────────────────────── */
 .card {
   background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
   padding: 20px; margin-bottom: 22px; box-shadow: var(--shadow);
@@ -224,6 +402,8 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
   #root { padding: 0 14px 48px; }
   .hero { margin: 0 -14px 22px; padding: 24px 14px 18px; }
   .hero-row { flex-direction: column; }
+  .hero-side { align-items: flex-start; }
   .auth-widget { justify-content: flex-start; }
   .teams-grid { grid-template-columns: 1fr; }
+  .theme-dropdown { right: auto; left: 0; }
 }

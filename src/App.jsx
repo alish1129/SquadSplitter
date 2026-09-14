@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState, useCallback } from 'react';
 import { supabase } from './supabaseClient.js';
 import { generateTeams } from './lib/teamBalancer.js';
 import AuthWidget from './components/AuthWidget.jsx';
+import ThemePicker from './components/ThemePicker.jsx';
 import Turnout from './components/Turnout.jsx';
 import Teams from './components/Teams.jsx';
 import RosterManager from './components/RosterManager.jsx';
@@ -88,7 +89,10 @@ export default function App() {
             <h1>Squad Split</h1>
             <p>Mark who’s in for this week, then split into two fair teams by skill and position.</p>
           </div>
-          <AuthWidget session={session} profile={profile} />
+          <div className="hero-side">
+            <AuthWidget session={session} profile={profile} />
+            <ThemePicker />
+          </div>
         </div>
       </div>
 
