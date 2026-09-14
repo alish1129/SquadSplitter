@@ -4,45 +4,32 @@ export const POSITIONS = ['GK', 'DEF', 'MID', 'FWD', 'FLEX'];
 export const POS_LABEL = { GK: 'GK', DEF: 'DEF', MID: 'MID', FWD: 'FWD', FLEX: 'FLEX' };
 
 // Split `players` (already filtered to is_in === true) into two balanced teams.
-// Groups by primary position, sorts by effective rating (raw + chemistry style
-// bonus), then greedily assigns each player to the lower-total team.
+// Uses the LPT (Longest Processing Time) greedy algorithm: sort all players by
+// effective rating descending, then assign each to whichever team currently has
+// the lower running total. Chemistry style bonuses are already included in
+// getEffectiveRating, so they naturally act as the tiebreaker for equal ratings.
 export function generateTeams(players) {
-  const groups = {};
-  POSITIONS.forEach((pos) => {
-    groups[pos] = [];
-  });
-  players.forEach((p) => {
-    const primary = (p.positions && p.positions[0]) || 'FLEX';
-    (groups[primary] || groups.FLEX).push(p);
+  const sorted = [...players].sort((a, b) => {
+    const diff = getEffectiveRating(b) - getEffectiveRating(a);
+    return diff !== 0 ? diff : a.name.localeCompare(b.name); // deterministic tiebreak
   });
 
   const teamA = [];
   const teamB = [];
   let sumA = 0;
   let sumB = 0;
-  let flip = false;
 
-  POSITIONS.forEach((pos) => {
-    const arr = [...groups[pos]].sort(
-      (a, b) => getEffectiveRating(b) - getEffectiveRating(a) || Math.random() - 0.5
-    );
-    arr.forEach((p) => {
-      const eff = getEffectiveRating(p);
-      let toA;
-      if (sumA < sumB) toA = true;
-      else if (sumB < sumA) toA = false;
-      else {
-        toA = !flip;
-        flip = !flip;
-      }
-      if (toA) {
-        teamA.push(p.id);
-        sumA += eff;
-      } else {
-        teamB.push(p.id);
-        sumB += eff;
-      }
-    });
+  sorted.forEach((p) => {
+    const eff = getEffectiveRating(p);
+    // Assign to lower-total team; break exact ties by team size then always A.
+    const toA = sumA < sumB || (sumA === sumB && teamA.length <= teamB.length);
+    if (toA) {
+      teamA.push(p.id);
+      sumA += eff;
+    } else {
+      teamB.push(p.id);
+      sumB += eff;
+    }
   });
 
   return { team_a: teamA, team_b: teamB };
