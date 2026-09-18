@@ -7,6 +7,7 @@ import Teams from './components/Teams.jsx';
 import RosterManager from './components/RosterManager.jsx';
 import AdminApprovals from './components/AdminApprovals.jsx';
 import AdminSettings from './components/AdminSettings.jsx';
+import SurveyManager from './components/SurveyManager.jsx';
 import ThemePicker from './components/ThemePicker.jsx';
 import SessionPicker from './components/SessionPicker.jsx';
 
@@ -278,6 +279,7 @@ export default function App() {
           {isAdmin && (
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
               <AdminSettings hideRatings={hideRatings} onOptimistic={setHideRatings} />
+              <SurveyManager players={players} gameSession={gameSession} />
               <RosterManager players={players} />
               <AdminApprovals selfId={authSession?.user?.id} />
             </div>
