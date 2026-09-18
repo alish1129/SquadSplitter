@@ -148,15 +148,32 @@ export default function App() {
 
   // ── Auth ─────────────────────────────────────────────────
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => {
+    async function syncSession() {
+      const { data } = await supabase.auth.getSession();
       setAuthSession(data.session);
       loadProfile(data.session?.user?.id);
-    });
+    }
+
+    syncSession();
+
+    // Propagate login/logout events from Supabase (also fires for other-tab changes
+    // that Supabase broadcasts via localStorage storage events)
     const { data: sub } = supabase.auth.onAuthStateChange((_ev, s) => {
       setAuthSession(s);
       loadProfile(s?.user?.id);
     });
-    return () => sub.subscription.unsubscribe();
+
+    // Re-sync when this tab becomes visible — catches the case where the user
+    // logged in (or out) on a different tab while this one was in the background
+    function onVisibilityChange() {
+      if (!document.hidden) syncSession();
+    }
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      sub.subscription.unsubscribe();
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
   }, [loadProfile]);
 
   // ── Navigate to a date ───────────────────────────────────
