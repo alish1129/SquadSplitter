@@ -75,3 +75,15 @@ export function teamsAsText(teams, playersById) {
   };
   return `${block('🟠 PINNIES', teams.team_a)}\n\n${block('🔵 SHIRTS', teams.team_b)}`;
 }
+
+export function teamsAsSquadList(teams, playersById) {
+  if (!teams) return '';
+  const block = (label, ids) => {
+    const names = ids
+      .map((id) => playersById[id]?.name)
+      .filter(Boolean)
+      .sort((a, b) => a.localeCompare(b));
+    return [label, ...names].join('\n');
+  };
+  return `${block('🟠 PINNIES', teams.team_a)}\n\n${block('🔵 SHIRTS', teams.team_b)}`;
+}

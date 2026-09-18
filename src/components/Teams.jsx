@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
+import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText, teamsAsSquadList } from '../lib/teamBalancer.js';
 import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
 function TeamCard({ cls, name, ids, playersById, isAdmin, hideRatings }) {
@@ -53,7 +53,7 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
   const splitIds = [...split.team_a, ...split.team_b].sort();
   const stale = JSON.stringify(currentInIds) !== JSON.stringify(splitIds);
 
-  async function copy() {
+  async function copyWithDetails() {
     const text = teamsAsText({ team_a: split.team_a, team_b: split.team_b }, playersById);
     try {
       await navigator.clipboard.writeText(text);
@@ -64,13 +64,40 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
     setTimeout(() => setToast(''), 2600);
   }
 
+  async function shareSquadList() {
+    const text = teamsAsSquadList({ team_a: split.team_a, team_b: split.team_b }, playersById);
+    if (navigator.share) {
+      try {
+        await navigator.share({ text });
+        return;
+      } catch (e) {
+        if (e.name === 'AbortError') return; // user cancelled — no toast
+      }
+    }
+    // Fallback: clipboard
+    try {
+      await navigator.clipboard.writeText(text);
+      setToast('Squad list copied to clipboard');
+    } catch {
+      setToast('Could not share — select the text manually');
+    }
+    setTimeout(() => setToast(''), 2600);
+  }
+
   return (
     <div className="card">
       <div className="card-head">
         <h2>Teams</h2>
-        <button type="button" className="btn secondary small" onClick={copy}>
-          Copy for chat
-        </button>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+          <button type="button" className="btn secondary small" onClick={shareSquadList}>
+            Share squad
+          </button>
+          {isAdmin && (
+            <button type="button" className="btn secondary small" onClick={copyWithDetails}>
+              Copy for chat
+            </button>
+          )}
+        </div>
       </div>
       {stale && (
         <div className="empty-note">
