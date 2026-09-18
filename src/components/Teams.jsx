@@ -1,25 +1,26 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient.js';
-import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
+import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText, TEAMS_CONFIG } from '../lib/teamBalancer.js';
 import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
 function TeamCard({
-  cls, name, teamKey, ids, playersById, isAdmin, hideRatings,
+  teamIdx, ids, playersById, isAdmin, hideRatings,
   dragging, dragOver, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop,
 }) {
+  const cfg   = TEAMS_CONFIG[teamIdx] ?? { name: `Team ${teamIdx + 1}`, icon: '⚽', cls: 'team-c' };
   const stats = computeTeamStats(ids, playersById);
-  const avg = stats.count ? (stats.total / stats.count).toFixed(1) : '0.0';
-  const isDropTarget = isAdmin && dragOver === teamKey && dragging?.fromTeam !== teamKey;
+  const avg   = stats.count ? (stats.total / stats.count).toFixed(1) : '0.0';
+  const isDropTarget = isAdmin && dragOver === teamIdx && dragging?.fromIdx !== teamIdx;
 
   return (
     <div
-      className={`team-card ${cls}${isDropTarget ? ' drag-over' : ''}`}
-      onDragOver={isAdmin ? (e) => onDragOver(e, teamKey) : undefined}
+      className={`team-card ${cfg.cls}${isDropTarget ? ' drag-over' : ''}`}
+      onDragOver={isAdmin ? (e) => onDragOver(e, teamIdx) : undefined}
       onDragLeave={isAdmin ? (e) => onDragLeave(e) : undefined}
-      onDrop={isAdmin ? (e) => onDrop(e, teamKey) : undefined}
+      onDrop={isAdmin ? (e) => onDrop(e, teamIdx) : undefined}
     >
       <div className="team-head">
-        <span className="team-name">{name}</span>
+        <span className="team-name">{cfg.icon} {cfg.name}</span>
         <span className="team-jersey" />
       </div>
       <div className="team-total">
@@ -35,9 +36,7 @@ function TeamCard({
       {POSITIONS.map((pos) =>
         stats.byPos[pos].length ? (
           <div className="team-pos-group" key={pos}>
-            <div className="team-pos-label">
-              {POS_LABEL[pos]} · {stats.byPos[pos].length}
-            </div>
+            <div className="team-pos-label">{POS_LABEL[pos]} · {stats.byPos[pos].length}</div>
             {stats.byPos[pos].map((p) => {
               const beingDragged = dragging?.playerId === p.id;
               return (
@@ -45,9 +44,9 @@ function TeamCard({
                   key={p.id}
                   className={`team-player${isAdmin ? ' draggable' : ''}${beingDragged ? ' is-dragging' : ''}`}
                   draggable={isAdmin || undefined}
-                  onDragStart={isAdmin ? (e) => onDragStart(e, p.id, teamKey) : undefined}
+                  onDragStart={isAdmin ? (e) => onDragStart(e, p.id, teamIdx) : undefined}
                   onDragEnd={isAdmin ? onDragEnd : undefined}
-                  title={isAdmin ? 'Drag to move to the other team' : undefined}
+                  title={isAdmin ? 'Drag to move to another team' : undefined}
                 >
                   <span>{p.name}</span>
                   {(isAdmin || !hideRatings) && (p.chemistry_styles ?? []).length > 0 && (
@@ -69,74 +68,68 @@ function TeamCard({
   );
 }
 
-export default function Teams({ split, players, playersById, onGenerate, isAdmin, hideRatings, generating, gameSession, onSplitChange }) {
-  const [toast, setToast] = useState('');
-  const [dragging, setDragging] = useState(null); // { playerId, fromTeam: 'a'|'b' }
-  const [dragOver, setDragOver] = useState(null); // 'a' | 'b' | null
+export default function Teams({
+  split, players, playersById, onGenerate, isAdmin, hideRatings,
+  generating, gameSession, onSplitChange,
+}) {
+  const [toast, setToast]     = useState('');
+  const [dragging, setDragging] = useState(null); // { playerId, fromIdx }
+  const [dragOver, setDragOver] = useState(null); // number | null
+  const [open, setOpen]       = useState(true);
 
-  if (!split || (!split.team_a?.length && !split.team_b?.length)) return null;
+  if (!split || (!split.team_a?.length && !split.team_b?.length && !split.teams?.length)) return null;
+
+  const allTeams = split.teams ?? [split.team_a, split.team_b];
 
   const currentInIds = players.filter((p) => p.is_in).map((p) => p.id).sort();
-  const splitIds = [...split.team_a, ...split.team_b].sort();
+  const splitIds = allTeams.flat().sort();
   const stale = JSON.stringify(currentInIds) !== JSON.stringify(splitIds);
 
   // ── Drag handlers ─────────────────────────────────────────
-  function onDragStart(e, playerId, fromTeam) {
-    setDragging({ playerId, fromTeam });
+  function onDragStart(e, playerId, fromIdx) {
+    setDragging({ playerId, fromIdx });
     e.dataTransfer.effectAllowed = 'move';
   }
+  function onDragEnd() { setDragging(null); setDragOver(null); }
 
-  function onDragEnd() {
-    setDragging(null);
-    setDragOver(null);
-  }
-
-  function onDragOver(e, toTeam) {
+  function onDragOver(e, toIdx) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    if (dragging && dragging.fromTeam !== toTeam) setDragOver(toTeam);
+    if (dragging && dragging.fromIdx !== toIdx) setDragOver(toIdx);
   }
-
   function onDragLeave(e) {
-    // Only clear when leaving the card element itself, not a child
     if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(null);
   }
 
-  async function onDrop(e, toTeam) {
+  async function onDrop(e, toIdx) {
     e.preventDefault();
     setDragOver(null);
-    if (!dragging || dragging.fromTeam === toTeam) { setDragging(null); return; }
+    if (!dragging || dragging.fromIdx === toIdx) { setDragging(null); return; }
 
-    const { playerId } = dragging;
+    const { playerId, fromIdx } = dragging;
     setDragging(null);
 
-    const newA = toTeam === 'a'
-      ? [...split.team_a, playerId]
-      : split.team_a.filter((id) => id !== playerId);
-    const newB = toTeam === 'b'
-      ? [...split.team_b, playerId]
-      : split.team_b.filter((id) => id !== playerId);
+    const newTeams = allTeams.map((team, i) => {
+      if (i === fromIdx) return team.filter((id) => id !== playerId);
+      if (i === toIdx)   return [...team, playerId];
+      return team;
+    });
 
-    // Optimistic update so UI snaps immediately
-    onSplitChange?.({ ...split, team_a: newA, team_b: newB });
+    const newSplit = { ...split, teams: newTeams, team_a: newTeams[0] ?? [], team_b: newTeams[1] ?? [] };
+    onSplitChange?.(newSplit);
 
     const { error } = await supabase
       .from('splits')
-      .update({ team_a: newA, team_b: newB })
+      .update({ teams: newTeams, team_a: newTeams[0] ?? [], team_b: newTeams[1] ?? [] })
       .eq('session_id', split.session_id);
-
     if (error) setToast('Save failed — try again');
   }
 
   // ── Copy / share ──────────────────────────────────────────
   async function copyWithDetails() {
-    const text = teamsAsText({ team_a: split.team_a, team_b: split.team_b }, playersById);
-    try {
-      await navigator.clipboard.writeText(text);
-      setToast('Copied — paste it into the chat');
-    } catch {
-      setToast('Could not copy — select the text manually');
-    }
+    const text = teamsAsText(split, playersById);
+    try { await navigator.clipboard.writeText(text); setToast('Copied — paste it into the chat'); }
+    catch { setToast('Could not copy'); }
     setTimeout(() => setToast(''), 2600);
   }
 
@@ -145,71 +138,77 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
     url.searchParams.set('view', 'squad');
     if (gameSession?.session_date) url.searchParams.set('date', gameSession.session_date);
     const shareUrl = url.toString();
-
     if (navigator.share) {
-      try {
-        await navigator.share({ url: shareUrl, title: 'Squad Split' });
-        return;
-      } catch (e) {
-        if (e.name === 'AbortError') return;
-      }
+      try { await navigator.share({ url: shareUrl, title: 'Squad Split' }); return; }
+      catch (e) { if (e.name === 'AbortError') return; }
     }
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      setToast('Squad link copied');
-    } catch {
-      setToast('Could not share');
-    }
+    try { await navigator.clipboard.writeText(shareUrl); setToast('Squad link copied'); }
+    catch { setToast('Could not share'); }
     setTimeout(() => setToast(''), 2600);
   }
 
-  // ── Render ────────────────────────────────────────────────
   const dragProps = { dragging, dragOver, onDragStart, onDragEnd, onDragOver, onDragLeave, onDrop };
 
   return (
     <div className="card">
-      <div className="card-head">
-        <h2>Teams</h2>
-        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn secondary small" onClick={shareSquad}>
-            Share squad
-          </button>
-          {isAdmin && (
-            <button type="button" className="btn secondary small" onClick={copyWithDetails}>
-              Copy for chat
-            </button>
-          )}
+      {/* ── Collapsible header ── */}
+      <div
+        className="card-head collapsible-head"
+        role="button"
+        tabIndex={0}
+        aria-expanded={open}
+        onClick={() => setOpen((v) => !v)}
+        onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setOpen((v) => !v)}
+      >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span className={`chev${open ? ' open' : ''}`}>▸</span>
+          <h2>Teams</h2>
+          <span className="count-badge">{allTeams.length} teams · {allTeams.flat().length} players</span>
+        </div>
+        <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }} onClick={(e) => e.stopPropagation()}>
+          <button type="button" className="btn secondary small" onClick={shareSquad}>Share squad</button>
+          {isAdmin && <button type="button" className="btn secondary small" onClick={copyWithDetails}>Copy for chat</button>}
         </div>
       </div>
 
-      {stale && (
-        <div className="empty-note">
-          ⚠️ Turnout changed since this split was made.{' '}
-          {isAdmin && (
-            <button type="button" className="btn small" onClick={onGenerate}>
-              Regenerate
-            </button>
+      {open && (
+        <>
+          {stale && (
+            <div className="empty-note">
+              ⚠️ Turnout changed since this split was made.{' '}
+              {isAdmin && <button type="button" className="btn small" onClick={onGenerate}>Regenerate</button>}
+            </div>
           )}
-        </div>
-      )}
 
-      {isAdmin && (
-        <p className="teams-dnd-hint">Drag a player to the other team to move them.</p>
-      )}
+          {isAdmin && (
+            <p className="teams-dnd-hint">Drag a player to move them to another team.</p>
+          )}
 
-      <div className="teams-grid">
-        <TeamCard cls="pinnies" name="Pinnies" teamKey="a" ids={split.team_a}
-          playersById={playersById} isAdmin={isAdmin} hideRatings={hideRatings} {...dragProps} />
-        <TeamCard cls="shirts"  name="Shirts"  teamKey="b" ids={split.team_b}
-          playersById={playersById} isAdmin={isAdmin} hideRatings={hideRatings} {...dragProps} />
-      </div>
+          <div
+            className="teams-grid"
+            style={{ gridTemplateColumns: `repeat(${Math.min(allTeams.length, 3)}, 1fr)` }}
+          >
+            {allTeams.map((ids, i) => (
+              <TeamCard
+                key={i}
+                teamIdx={i}
+                ids={ids}
+                playersById={playersById}
+                isAdmin={isAdmin}
+                hideRatings={hideRatings}
+                {...dragProps}
+              />
+            ))}
+          </div>
 
-      {isAdmin && (
-        <div className="actions-row">
-          <button type="button" className="btn secondary small" onClick={onGenerate} disabled={generating}>
-            🔀 Regenerate
-          </button>
-        </div>
+          {isAdmin && (
+            <div className="actions-row">
+              <button type="button" className="btn secondary small" onClick={onGenerate} disabled={generating}>
+                🔀 Regenerate
+              </button>
+            </div>
+          )}
+        </>
       )}
 
       {toast && <div className="toast">{toast}</div>}

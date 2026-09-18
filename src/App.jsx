@@ -35,6 +35,7 @@ export default function App() {
 
   // App config
   const [hideRatings, setHideRatings] = useState(true);   // default: hidden until DB confirms
+  const [numTeams, setNumTeams]       = useState(2);
 
   // Game session
   const [gameSession, setGameSession] = useState(null);   // {id, session_date, …}
@@ -194,12 +195,18 @@ export default function App() {
   async function handleGenerate() {
     if (!gameSession) return;
     const inPlayers = playersWithTurnout.filter((p) => p.is_in);
-    if (inPlayers.length < 2) return;
+    if (inPlayers.length < numTeams) return;
     setGenerating(true);
-    const { team_a, team_b } = generateTeams(inPlayers);
+    const { teams, team_a, team_b } = generateTeams(inPlayers, numTeams);
     const { error } = await supabase
       .from('splits')
-      .upsert({ session_id: gameSession.id, team_a, team_b, generated_at: new Date().toISOString() });
+      .upsert({
+        session_id: gameSession.id,
+        team_a, team_b,
+        teams,
+        num_teams: numTeams,
+        generated_at: new Date().toISOString(),
+      });
     setGenerating(false);
     if (error) setGlobalError(error.message);
   }
@@ -242,32 +249,30 @@ export default function App() {
                 : 'No session is open yet. Ask an admin to create one and send you the link.'}
             </p>
           ) : (
-            <div className="main-grid">
-              <div>
-                <Turnout
-                  players={playersWithTurnout}
-                  session={authSession}
-                  sessionId={gameSession.id}
-                  isAdmin={isAdmin}
-                  hideRatings={hideRatings}
-                  onGenerate={handleGenerate}
-                  generating={generating}
-                />
-              </div>
-              <div>
-                <Teams
-                  split={split}
-                  players={playersWithTurnout}
-                  playersById={playersById}
-                  onGenerate={handleGenerate}
-                  isAdmin={isAdmin}
-                  hideRatings={hideRatings}
-                  generating={generating}
-                  gameSession={gameSession}
-                  onSplitChange={setSplit}
-                />
-              </div>
-            </div>
+            <>
+              <Turnout
+                players={playersWithTurnout}
+                session={authSession}
+                sessionId={gameSession.id}
+                isAdmin={isAdmin}
+                hideRatings={hideRatings}
+                numTeams={numTeams}
+                onNumTeamsChange={setNumTeams}
+                onGenerate={handleGenerate}
+                generating={generating}
+              />
+              <Teams
+                split={split}
+                players={playersWithTurnout}
+                playersById={playersById}
+                onGenerate={handleGenerate}
+                isAdmin={isAdmin}
+                hideRatings={hideRatings}
+                generating={generating}
+                gameSession={gameSession}
+                onSplitChange={setSplit}
+              />
+            </>
           )}
 
           {isAdmin && (

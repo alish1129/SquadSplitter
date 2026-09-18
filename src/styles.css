@@ -560,15 +560,37 @@ button { font-family: inherit; cursor: pointer; }
 .approval-row:last-of-type { border-bottom: none; }
 .approval-row .email { font-size: 0.88rem; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
 
+/* ── Collapsible card heads ─────────────────────────────────── */
+.collapsible-head { cursor: pointer; user-select: none; }
+.collapsible-head:hover { background: var(--surface-2); border-radius: 10px; }
+.chev { display: inline-block; transition: transform .18s ease; font-style: normal; font-size: .8em; }
+.chev.open { transform: rotate(90deg); }
+
 /* ── Teams ──────────────────────────────────────────────────── */
-.teams-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.teams-grid { display: grid; gap: 14px; }
 .team-card { border-radius: 14px; padding: 16px; border: 1px solid var(--border); background: var(--surface); }
 .team-card.pinnies { border-left: 5px solid var(--pinnie); }
 .team-card.shirts  { border-left: 5px solid var(--shirts); }
+.team-card.team-c  { border-left: 5px solid #2e9e58; }
+.team-card.team-d  { border-left: 5px solid #c0392b; }
+.team-card.team-e  { border-left: 5px solid #666; }
+.team-card.team-f  { border-left: 5px solid #c8a000; }
 .team-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 4px; }
 .team-name { font-family: 'Oswald', sans-serif; font-weight: 700; text-transform: uppercase; font-size: 1rem; }
 .team-card.pinnies .team-name { color: var(--pinnie-strong); }
 .team-card.shirts .team-name  { color: var(--shirts-strong); }
+.team-card.team-c .team-name  { color: #1f7a40; }
+.team-card.team-d .team-name  { color: #a93226; }
+.team-card.team-e .team-name  { color: #555; }
+.team-card.team-f .team-name  { color: #a07a00; }
+[data-theme='dark'] .team-card.team-c .team-name,
+:root:not([data-theme]) .team-card.team-c .team-name { color: #5ed98a; }
+[data-theme='dark'] .team-card.team-d .team-name,
+:root:not([data-theme]) .team-card.team-d .team-name { color: #e87c74; }
+[data-theme='dark'] .team-card.team-e .team-name,
+:root:not([data-theme]) .team-card.team-e .team-name { color: #aaa; }
+[data-theme='dark'] .team-card.team-f .team-name,
+:root:not([data-theme]) .team-card.team-f .team-name { color: #e6c44a; }
 .team-jersey { width: 22px; height: 22px; border-radius: 6px; flex: none; }
 .team-card.pinnies .team-jersey { background: var(--pinnie); }
 .team-card.shirts .team-jersey  { background: var(--shirts); }
@@ -584,6 +606,21 @@ button { font-family: inherit; cursor: pointer; }
 .team-card.pinnies.drag-over { box-shadow: inset 0 0 0 2px var(--pinnie); }
 .team-card.shirts.drag-over  { box-shadow: inset 0 0 0 2px var(--shirts); }
 .teams-dnd-hint { font-size: .75rem; color: var(--text-muted); margin: 4px 0 10px; }
+
+/* ── Num teams selector ─────────────────────────────────────── */
+.num-teams-label { display: flex; align-items: center; gap: 8px; }
+.num-teams-select {
+  padding: 6px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  font-size: .85rem; font-family: inherit; cursor: pointer;
+}
+.num-teams-select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+/* ── Squad view per-team colours ────────────────────────────── */
+.sv-team--team-c .sv-team-label { color: #2e9e58; }
+.sv-team--team-d .sv-team-label { color: #c0392b; }
+.sv-team--team-e .sv-team-label { color: #666; }
+.sv-team--team-f .sv-team-label { color: #c8a000; }
 
 /* ── Misc ───────────────────────────────────────────────────── */
 .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; align-items: center; }
@@ -787,8 +824,7 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
   .hero-row { flex-direction: column; gap: 14px; }
   .auth-widget { justify-content: flex-start; }
   .auth-form input { min-width: 0; flex: 1 1 130px; }
-  .main-grid { grid-template-columns: 1fr; gap: 16px; }
-  .teams-grid { grid-template-columns: 1fr; }
+  .teams-grid { grid-template-columns: 1fr !important; }
   .theme-dropdown { right: auto; left: 0; }
   .session-bar-row { flex-direction: column; align-items: flex-start; }
   .session-form { flex-direction: column; align-items: stretch; }

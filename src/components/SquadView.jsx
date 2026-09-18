@@ -1,16 +1,18 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { formatSessionDate } from './SessionPicker.jsx';
+import { TEAMS_CONFIG } from '../lib/teamBalancer.js';
 
-function TeamColumn({ label, color, ids, playersById }) {
+function TeamColumn({ teamIdx, ids, playersById }) {
+  const cfg   = TEAMS_CONFIG[teamIdx] ?? { name: `Team ${teamIdx + 1}`, icon: '⚽', cls: 'team-c' };
   const names = ids
     .map((id) => playersById[id]?.name)
     .filter(Boolean)
     .sort((a, b) => a.localeCompare(b));
 
   return (
-    <div className={`sv-team sv-team--${color}`}>
-      <div className="sv-team-label">{label}</div>
+    <div className={`sv-team sv-team--${cfg.cls}`}>
+      <div className="sv-team-label">{cfg.icon} {cfg.name}</div>
       <div className="sv-players">
         {names.map((name) => (
           <div key={name} className="sv-player">{name}</div>
@@ -96,21 +98,22 @@ export default function SquadView({ dateParam }) {
         </div>
       </div>
 
-      <div className="sv-field">
-        <TeamColumn
-          label="🟠 PINNIES"
-          color="pinnies"
-          ids={split.team_a}
-          playersById={playersById}
-        />
-        <div className="sv-vs">VS</div>
-        <TeamColumn
-          label="🔵 SHIRTS"
-          color="shirts"
-          ids={split.team_b}
-          playersById={playersById}
-        />
-      </div>
+      {(() => {
+        const allTeams = split.teams ?? [split.team_a, split.team_b];
+        const cols = allTeams.length === 2
+          ? '1fr auto 1fr'
+          : `repeat(${Math.min(allTeams.length, 3)}, 1fr)`;
+        return (
+          <div className="sv-field" style={{ gridTemplateColumns: cols }}>
+            {allTeams.map((ids, i) => (
+              <>
+                {i === 1 && allTeams.length === 2 && <div key="vs" className="sv-vs">VS</div>}
+                <TeamColumn key={i} teamIdx={i} ids={ids} playersById={playersById} />
+              </>
+            ))}
+          </div>
+        );
+      })()}
 
       <div className="sv-footer">Squad Split · pickup soccer</div>
     </div>
