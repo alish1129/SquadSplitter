@@ -264,6 +264,7 @@ export default function App() {
                   hideRatings={hideRatings}
                   generating={generating}
                   gameSession={gameSession}
+                  onSplitChange={setSplit}
                 />
               </div>
             </div>

@@ -575,7 +575,15 @@ button { font-family: inherit; cursor: pointer; }
 .team-total { font-family: 'Oswald', sans-serif; font-variant-numeric: tabular-nums; font-size: 0.85rem; color: var(--text-muted); margin-bottom: 10px; }
 .team-pos-group { margin-bottom: 8px; }
 .team-pos-label { font-size: 0.68rem; font-weight: 700; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 4px; text-transform: uppercase; }
-.team-player { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: 0.9rem; color: var(--text); }
+.team-player { display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 5px 0; font-size: 0.9rem; color: var(--text); border-radius: 6px; transition: opacity .15s; }
+.team-player.draggable { cursor: grab; padding: 5px 6px; margin: 0 -6px; }
+.team-player.draggable:hover { background: var(--surface-2); }
+.team-player.draggable:active { cursor: grabbing; }
+.team-player.is-dragging { opacity: 0.3; }
+.team-card.drag-over { background: var(--surface-2); }
+.team-card.pinnies.drag-over { box-shadow: inset 0 0 0 2px var(--pinnie); }
+.team-card.shirts.drag-over  { box-shadow: inset 0 0 0 2px var(--shirts); }
+.teams-dnd-hint { font-size: .75rem; color: var(--text-muted); margin: 4px 0 10px; }
 
 /* ── Misc ───────────────────────────────────────────────────── */
 .actions-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; align-items: center; }
