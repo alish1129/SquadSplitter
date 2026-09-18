@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText, teamsAsSquadList } from '../lib/teamBalancer.js';
+import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
 import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
 function TeamCard({ cls, name, ids, playersById, isAdmin, hideRatings }) {
@@ -44,7 +44,7 @@ function TeamCard({ cls, name, ids, playersById, isAdmin, hideRatings }) {
   );
 }
 
-export default function Teams({ split, players, playersById, onGenerate, isAdmin, hideRatings, generating }) {
+export default function Teams({ split, players, playersById, onGenerate, isAdmin, hideRatings, generating, gameSession }) {
   const [toast, setToast] = useState('');
 
   if (!split || (!split.team_a?.length && !split.team_b?.length)) return null;
@@ -64,22 +64,25 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
     setTimeout(() => setToast(''), 2600);
   }
 
-  async function shareSquadList() {
-    const text = teamsAsSquadList({ team_a: split.team_a, team_b: split.team_b }, playersById);
+  async function shareSquad() {
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', 'squad');
+    if (gameSession?.session_date) url.searchParams.set('date', gameSession.session_date);
+    const shareUrl = url.toString();
+
     if (navigator.share) {
       try {
-        await navigator.share({ text });
+        await navigator.share({ url: shareUrl, title: 'Squad Split' });
         return;
       } catch (e) {
-        if (e.name === 'AbortError') return; // user cancelled — no toast
+        if (e.name === 'AbortError') return;
       }
     }
-    // Fallback: clipboard
     try {
-      await navigator.clipboard.writeText(text);
-      setToast('Squad list copied to clipboard');
+      await navigator.clipboard.writeText(shareUrl);
+      setToast('Squad link copied');
     } catch {
-      setToast('Could not share — select the text manually');
+      setToast('Could not share');
     }
     setTimeout(() => setToast(''), 2600);
   }
@@ -89,7 +92,7 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
       <div className="card-head">
         <h2>Teams</h2>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-          <button type="button" className="btn secondary small" onClick={shareSquadList}>
+          <button type="button" className="btn secondary small" onClick={shareSquad}>
             Share squad
           </button>
           {isAdmin && (

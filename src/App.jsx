@@ -14,12 +14,16 @@ import SessionPicker from './components/SessionPicker.jsx';
 function getDateParam() {
   return new URLSearchParams(window.location.search).get('date') ?? null;
 }
+function getViewParam() {
+  return new URLSearchParams(window.location.search).get('view') ?? null;
+}
 function pushDateParam(dateStr) {
   const url = new URL(window.location);
   if (dateStr) url.searchParams.set('date', dateStr);
   else url.searchParams.delete('date');
   window.history.pushState({}, '', url);
 }
+
 
 export default function App() {
   // Auth
@@ -166,6 +170,12 @@ export default function App() {
     }
   }
 
+  async function reloadSession() {
+    if (!gameSession) return;
+    const gs = await loadGameSession(gameSession.session_date);
+    setGameSession(gs);
+  }
+
   // ── Derived state ─────────────────────────────────────────
   const isAdmin = !!profile?.is_admin;
 
@@ -222,6 +232,7 @@ export default function App() {
             gameSession={gameSession}
             isAdmin={isAdmin}
             onNavigate={navigateToDate}
+            onSessionUpdated={reloadSession}
           />
 
           {!gameSession ? (
@@ -252,6 +263,7 @@ export default function App() {
                   isAdmin={isAdmin}
                   hideRatings={hideRatings}
                   generating={generating}
+                  gameSession={gameSession}
                 />
               </div>
             </div>

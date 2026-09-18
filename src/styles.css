@@ -681,6 +681,96 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
 .toggle-switch.on .toggle-thumb { transform: translateX(18px); background: var(--on-accent); }
 .toggle-switch:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
+/* ── Match details admin form ───────────────────────────────── */
+.match-details-form {
+  display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
+  padding-top: 10px; border-top: 1px solid var(--border); margin-top: 10px;
+}
+.match-details-input {
+  flex: 1 1 180px; min-width: 0;
+  padding: 7px 10px; border-radius: 8px;
+  border: 1px solid var(--border); background: var(--surface);
+  color: var(--text); font-size: .85rem; font-family: inherit;
+}
+.match-details-input:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; border-color: var(--accent); }
+.session-meta { font-size: .8rem; color: var(--text-muted); margin-top: 3px; }
+.session-venue-link { color: var(--accent); text-decoration: none; }
+.session-venue-link:hover { text-decoration: underline; }
+
+/* ── Squad view (shareable page) ────────────────────────────── */
+.sv-root {
+  min-height: 100vh;
+  background: var(--bg);
+  display: flex; flex-direction: column;
+  font-family: 'Oswald', 'Arial Narrow', sans-serif;
+  padding: 0;
+}
+.sv-header {
+  background: linear-gradient(135deg, var(--hero-from), var(--hero-to));
+  color: var(--hero-text);
+  padding: 28px 32px 22px;
+  display: flex; align-items: flex-start; justify-content: space-between; gap: 20px;
+  flex-wrap: wrap;
+}
+.sv-brand {
+  font-size: 2.4rem; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; line-height: 1; color: #f9c740;
+}
+.sv-meta { text-align: right; flex: 1; min-width: 200px; }
+.sv-meta-date { font-size: 1rem; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; opacity: .9; }
+.sv-meta-details {
+  font-size: .9rem; margin-top: 5px; opacity: .8;
+  display: flex; align-items: center; gap: 6px; justify-content: flex-end; flex-wrap: wrap;
+}
+.sv-dot { opacity: .5; }
+.sv-venue-link { color: inherit; text-decoration: underline; text-decoration-color: rgba(255,255,255,.4); }
+.sv-venue-link:hover { opacity: 1; }
+
+.sv-field {
+  flex: 1; display: grid; grid-template-columns: 1fr auto 1fr;
+  gap: 0; padding: 32px 24px; align-items: start;
+}
+.sv-vs {
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.1rem; font-weight: 800; letter-spacing: .1em;
+  color: var(--text-muted); padding: 0 18px; padding-top: 60px;
+}
+.sv-team { padding: 0 8px; }
+.sv-team-label {
+  font-size: 1.1rem; font-weight: 800; letter-spacing: .06em;
+  text-transform: uppercase; margin-bottom: 16px; padding-bottom: 10px;
+  border-bottom: 3px solid currentColor;
+}
+.sv-team--pinnies .sv-team-label { color: var(--pinnie); }
+.sv-team--shirts  .sv-team-label { color: var(--shirts); }
+.sv-players { display: flex; flex-direction: column; gap: 2px; }
+.sv-player {
+  font-size: 1rem; font-weight: 500; padding: 7px 0;
+  border-bottom: 1px solid var(--border); color: var(--text);
+  text-transform: uppercase; letter-spacing: .03em;
+}
+.sv-player:last-child { border-bottom: none; }
+.sv-footer {
+  text-align: center; padding: 18px;
+  font-size: .75rem; letter-spacing: .08em; text-transform: uppercase;
+  color: var(--text-muted); border-top: 1px solid var(--border);
+}
+.sv-loading {
+  align-items: center; justify-content: center; gap: 20px;
+  color: var(--text-muted); font-size: 1rem;
+}
+.sv-loading .sv-brand { color: var(--accent); }
+
+@media (max-width: 520px) {
+  .sv-header { padding: 20px; }
+  .sv-brand { font-size: 1.8rem; }
+  .sv-meta { text-align: left; }
+  .sv-meta-details { justify-content: flex-start; }
+  .sv-field { grid-template-columns: 1fr 1fr; gap: 16px; padding: 20px 16px; }
+  .sv-vs { display: none; }
+  .sv-player { font-size: .88rem; }
+}
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 680px) {
   #root { padding: 0 16px 56px; }
