@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
 import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
-function TeamCard({ cls, name, ids, playersById }) {
+function TeamCard({ cls, name, ids, playersById, isAdmin }) {
   const stats = computeTeamStats(ids, playersById);
   const avg = stats.count ? (stats.total / stats.count).toFixed(1) : '0.0';
   return (
@@ -12,7 +12,9 @@ function TeamCard({ cls, name, ids, playersById }) {
         <span className="team-jersey" />
       </div>
       <div className="team-total">
-        {stats.count} players · total {stats.total} · avg {avg}
+        {isAdmin
+          ? `${stats.count} players · total ${stats.total} · avg ${avg}`
+          : `${stats.count} players`}
       </div>
       {stats.count === 0 && <p className="empty-note">No players yet.</p>}
       {POSITIONS.map((pos) =>
@@ -81,8 +83,8 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
         </div>
       )}
       <div className="teams-grid">
-        <TeamCard cls="pinnies" name="Pinnies" ids={split.team_a} playersById={playersById} />
-        <TeamCard cls="shirts" name="Shirts" ids={split.team_b} playersById={playersById} />
+        <TeamCard cls="pinnies" name="Pinnies" ids={split.team_a} playersById={playersById} isAdmin={isAdmin} />
+        <TeamCard cls="shirts"  name="Shirts"  ids={split.team_b} playersById={playersById} isAdmin={isAdmin} />
       </div>
       {isAdmin && (
         <div className="actions-row">
