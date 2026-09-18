@@ -10,7 +10,6 @@ export default function SurveyManager({ players, gameSession }) {
   const [surveys, setSurveys]         = useState([]);
   const [newType, setNewType]         = useState('overall');
   const [creating, setCreating]       = useState(false);
-  const [open, setOpen]               = useState(true);
   const [toast, setToast]             = useState('');
   const [resultsMap, setResultsMap]   = useState({}); // surveyId → results[] | undefined
 
@@ -18,25 +17,26 @@ export default function SurveyManager({ players, gameSession }) {
 
   async function loadSurveys() {
     if (!gameSession) { setSurveys([]); return; }
+    try {
+      const { data, error } = await supabase
+        .from('player_surveys')
+        .select('*')
+        .eq('session_id', gameSession.id)
+        .order('created_at', { ascending: false });
 
-    const { data } = await supabase
-      .from('player_surveys')
-      .select('*')
-      .eq('session_id', gameSession.id)
-      .order('created_at', { ascending: false });
+      if (error || !data?.length) { setSurveys([]); return; }
 
-    if (!data?.length) { setSurveys([]); return; }
+      const ids = data.map((s) => s.id);
+      const { data: counts } = await supabase
+        .from('survey_responses')
+        .select('survey_id')
+        .in('survey_id', ids);
 
-    const ids = data.map((s) => s.id);
-    const { data: counts } = await supabase
-      .from('survey_responses')
-      .select('survey_id')
-      .in('survey_id', ids);
+      const countMap = {};
+      (counts ?? []).forEach((r) => { countMap[r.survey_id] = (countMap[r.survey_id] ?? 0) + 1; });
 
-    const countMap = {};
-    (counts ?? []).forEach((r) => { countMap[r.survey_id] = (countMap[r.survey_id] ?? 0) + 1; });
-
-    setSurveys(data.map((s) => ({ ...s, response_count: countMap[s.id] ?? 0 })));
+      setSurveys(data.map((s) => ({ ...s, response_count: countMap[s.id] ?? 0 })));
+    } catch { setSurveys([]); }
   }
 
   async function createSurvey() {
@@ -91,11 +91,7 @@ export default function SurveyManager({ players, gameSession }) {
   }
 
   return (
-    <details
-      className="roster-details card"
-      open={open}
-      onToggle={(e) => setOpen(e.target.open)}
-    >
+    <details className="roster-details card">
       <summary>
         <span className="chev">▸</span>
         <h2 style={{ display: 'inline' }}>Player surveys</h2>
