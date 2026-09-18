@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { POSITIONS, POS_LABEL, computeTeamStats, teamsAsText } from '../lib/teamBalancer.js';
 import { CHEM_STYLES } from '../lib/chemistryStyles.js';
 
-function TeamCard({ cls, name, ids, playersById, isAdmin }) {
+function TeamCard({ cls, name, ids, playersById, isAdmin, hideRatings }) {
   const stats = computeTeamStats(ids, playersById);
   const avg = stats.count ? (stats.total / stats.count).toFixed(1) : '0.0';
   return (
@@ -12,7 +12,7 @@ function TeamCard({ cls, name, ids, playersById, isAdmin }) {
         <span className="team-jersey" />
       </div>
       <div className="team-total">
-        {isAdmin
+        {(isAdmin || !hideRatings)
           ? `${stats.count} players · total ${stats.total} · avg ${avg}`
           : `${stats.count} players`}
       </div>
@@ -26,7 +26,7 @@ function TeamCard({ cls, name, ids, playersById, isAdmin }) {
             {stats.byPos[pos].map((p) => (
               <div className="team-player" key={p.id}>
                 <span>{p.name}</span>
-                {isAdmin && (p.chemistry_styles ?? []).length > 0 && (
+                {(isAdmin || !hideRatings) && (p.chemistry_styles ?? []).length > 0 && (
                   <span className="team-player-chem">
                     {p.chemistry_styles.map((cs) =>
                       CHEM_STYLES[cs]
@@ -44,7 +44,7 @@ function TeamCard({ cls, name, ids, playersById, isAdmin }) {
   );
 }
 
-export default function Teams({ split, players, playersById, onGenerate, isAdmin, generating }) {
+export default function Teams({ split, players, playersById, onGenerate, isAdmin, hideRatings, generating }) {
   const [toast, setToast] = useState('');
 
   if (!split || (!split.team_a?.length && !split.team_b?.length)) return null;
@@ -83,8 +83,8 @@ export default function Teams({ split, players, playersById, onGenerate, isAdmin
         </div>
       )}
       <div className="teams-grid">
-        <TeamCard cls="pinnies" name="Pinnies" ids={split.team_a} playersById={playersById} isAdmin={isAdmin} />
-        <TeamCard cls="shirts"  name="Shirts"  ids={split.team_b} playersById={playersById} isAdmin={isAdmin} />
+        <TeamCard cls="pinnies" name="Pinnies" ids={split.team_a} playersById={playersById} isAdmin={isAdmin} hideRatings={hideRatings} />
+        <TeamCard cls="shirts"  name="Shirts"  ids={split.team_b} playersById={playersById} isAdmin={isAdmin} hideRatings={hideRatings} />
       </div>
       {isAdmin && (
         <div className="actions-row">

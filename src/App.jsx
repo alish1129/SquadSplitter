@@ -6,6 +6,7 @@ import Turnout from './components/Turnout.jsx';
 import Teams from './components/Teams.jsx';
 import RosterManager from './components/RosterManager.jsx';
 import AdminApprovals from './components/AdminApprovals.jsx';
+import AdminSettings from './components/AdminSettings.jsx';
 import ThemePicker from './components/ThemePicker.jsx';
 import SessionPicker from './components/SessionPicker.jsx';
 
@@ -28,6 +29,9 @@ export default function App() {
   // Roster
   const [players, setPlayers] = useState([]);
 
+  // App config
+  const [hideRatings, setHideRatings] = useState(true);   // default: hidden until DB confirms
+
   // Game session
   const [gameSession, setGameSession] = useState(null);   // {id, session_date, …}
   const [turnoutMap, setTurnoutMap] = useState({});        // { player_id → is_in }
@@ -37,6 +41,7 @@ export default function App() {
   const [generating, setGenerating] = useState(false);
   const [globalError, setGlobalError] = useState('');
   const realtimeRef = useRef(null);
+  const configChRef = useRef(null);
 
   // ── Data loaders ─────────────────────────────────────────
   const loadPlayers = useCallback(async () => {
@@ -93,10 +98,19 @@ export default function App() {
     setProfile(data ?? { id: userId, is_admin: false });
   }, []);
 
+  const loadConfig = useCallback(async () => {
+    const { data } = await supabase
+      .from('app_config')
+      .select('hide_ratings')
+      .eq('id', 1)
+      .maybeSingle();
+    if (data) setHideRatings(data.hide_ratings);
+  }, []);
+
   // ── Boot ─────────────────────────────────────────────────
   useEffect(() => {
     async function boot() {
-      await loadPlayers();
+      await Promise.all([loadPlayers(), loadConfig()]);
       const gs = await loadGameSession(getDateParam());
       if (gs) {
         setGameSession(gs);
@@ -113,9 +127,16 @@ export default function App() {
       .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, loadPlayers)
       .subscribe();
 
+    // App config realtime (admin toggles visible to all sessions instantly)
+    configChRef.current = supabase
+      .channel('app-config-changes')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'app_config' }, loadConfig)
+      .subscribe();
+
     return () => {
       supabase.removeChannel(playersCh);
       if (realtimeRef.current) supabase.removeChannel(realtimeRef.current);
+      if (configChRef.current) supabase.removeChannel(configChRef.current);
     };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -217,6 +238,7 @@ export default function App() {
                   session={authSession}
                   sessionId={gameSession.id}
                   isAdmin={isAdmin}
+                  hideRatings={hideRatings}
                   onGenerate={handleGenerate}
                   generating={generating}
                 />
@@ -228,6 +250,7 @@ export default function App() {
                   playersById={playersById}
                   onGenerate={handleGenerate}
                   isAdmin={isAdmin}
+                  hideRatings={hideRatings}
                   generating={generating}
                 />
               </div>
@@ -236,6 +259,7 @@ export default function App() {
 
           {isAdmin && (
             <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 20 }}>
+              <AdminSettings hideRatings={hideRatings} onOptimistic={setHideRatings} />
               <RosterManager players={players} />
               <AdminApprovals selfId={authSession?.user?.id} />
             </div>

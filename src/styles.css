@@ -655,6 +655,32 @@ details.roster-details[open] > summary .chev { transform: rotate(90deg); }
 [data-theme='wc2022'] .chem-badge.chem-midfield  { color: #82e0aa; border-color: rgba(50,180,90,.45); }
 [data-theme='wc2022'] .chem-badge.chem-defending { color: #85c1e9; border-color: rgba(60,130,210,.45); }
 
+/* ── Admin settings toggle ──────────────────────────────────── */
+.setting-row {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 16px; padding: 12px 8px; cursor: pointer; user-select: none;
+  border-radius: 8px;
+}
+.setting-row:hover { background: var(--surface-2); }
+.setting-label { font-weight: 600; font-size: .9rem; color: var(--text); }
+.setting-hint  { font-size: .78rem; color: var(--text-muted); margin-top: 2px; }
+
+.toggle-switch {
+  position: relative; width: 44px; height: 26px; border-radius: 99px;
+  background: var(--surface-3); border: 2px solid var(--border);
+  cursor: pointer; flex: none; transition: background .18s, border-color .18s;
+  padding: 0;
+}
+.toggle-switch.on { background: var(--accent); border-color: var(--accent); }
+.toggle-thumb {
+  display: block; position: absolute; top: 3px; left: 3px;
+  width: 16px; height: 16px; border-radius: 50%;
+  background: var(--text-muted);
+  transition: transform .18s, background .18s;
+}
+.toggle-switch.on .toggle-thumb { transform: translateX(18px); background: var(--on-accent); }
+.toggle-switch:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
 /* ── Responsive ─────────────────────────────────────────────── */
 @media (max-width: 680px) {
   #root { padding: 0 16px 56px; }

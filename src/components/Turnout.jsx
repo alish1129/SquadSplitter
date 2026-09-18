@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { PosPill, RatingBadge, ChemStyleBadges } from './shared.jsx';
 
-export default function Turnout({ players, session, sessionId, isAdmin, onGenerate, generating }) {
+export default function Turnout({ players, session, sessionId, isAdmin, hideRatings, onGenerate, generating }) {
   const [toggling, setToggling] = useState(null);
   const [error, setError] = useState('');
 
@@ -99,8 +99,8 @@ export default function Turnout({ players, session, sessionId, isAdmin, onGenera
               <span className="name">{p.name}</span>
               {isSelf && <span className="you-tag" aria-label="This is you">YOU</span>}
               <PosPill positions={p.positions} />
-              {isAdmin && <RatingBadge rating={p.rating} />}
-              {isAdmin && <ChemStyleBadges chemStyles={p.chemistry_styles} />}
+              {(isAdmin || !hideRatings) && <RatingBadge rating={p.rating} />}
+              {(isAdmin || !hideRatings) && <ChemStyleBadges chemStyles={p.chemistry_styles} />}
             </label>
           );
         })}
