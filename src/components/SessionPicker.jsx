@@ -19,11 +19,13 @@ export default function SessionPicker({ gameSession, isAdmin, onNavigate, onSess
   // Match detail fields (admin)
   const [matchTime, setMatchTime] = useState('');
   const [venueUrl, setVenueUrl] = useState('');
+  const [venueTitle, setVenueTitle] = useState('');
   const [detailsSaved, setDetailsSaved] = useState(false);
 
   useEffect(() => {
     setMatchTime(gameSession?.match_time ?? '');
     setVenueUrl(gameSession?.venue_url ?? '');
+    setVenueTitle(gameSession?.venue_title ?? '');
     setDetailsSaved(false);
   }, [gameSession?.id]);
 
@@ -45,7 +47,7 @@ export default function SessionPicker({ gameSession, isAdmin, onNavigate, onSess
     if (!gameSession) return;
     const { error } = await supabase
       .from('sessions')
-      .update({ match_time: matchTime || null, venue_url: venueUrl || null })
+      .update({ match_time: matchTime || null, venue_url: venueUrl || null, venue_title: venueTitle || null })
       .eq('id', gameSession.id);
     if (error) { showToast('Error: ' + error.message); return; }
     setDetailsSaved(true);
@@ -92,7 +94,7 @@ export default function SessionPicker({ gameSession, isAdmin, onNavigate, onSess
                   rel="noopener noreferrer"
                   className="session-venue-link"
                 >
-                  📍 Ground
+                  📍 {gameSession.venue_title || 'Ground'}
                 </a>
               )}
             </div>
@@ -137,8 +139,15 @@ export default function SessionPicker({ gameSession, isAdmin, onNavigate, onSess
             className="match-details-input"
           />
           <input
+            type="text"
+            placeholder="Ground name  e.g. Futsal Arena"
+            value={venueTitle}
+            onChange={(e) => setVenueTitle(e.target.value)}
+            className="match-details-input"
+          />
+          <input
             type="url"
-            placeholder="Google Maps link for the ground"
+            placeholder="Google Maps link (optional)"
             value={venueUrl}
             onChange={(e) => setVenueUrl(e.target.value)}
             className="match-details-input"

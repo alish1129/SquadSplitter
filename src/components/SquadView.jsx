@@ -76,18 +76,7 @@ export default function SquadView({ dateParam }) {
     );
   }
 
-  const venueLabel = session.venue_url
-    ? (() => {
-        try {
-          const u = new URL(session.venue_url);
-          // Try to extract a readable name from Google Maps URL
-          const q = u.searchParams.get('q') || u.searchParams.get('query');
-          return q || u.hostname;
-        } catch {
-          return 'View on map';
-        }
-      })()
-    : null;
+  const venueLabel = session.venue_title || (session.venue_url ? 'View on map' : null);
 
   return (
     <div className="sv-root">
@@ -98,10 +87,10 @@ export default function SquadView({ dateParam }) {
           <div className="sv-meta-details">
             {session.match_time && <span>{session.match_time}</span>}
             {session.match_time && session.venue_url && <span className="sv-dot">·</span>}
-            {session.venue_url && (
-              <a href={session.venue_url} target="_blank" rel="noopener noreferrer" className="sv-venue-link">
-                📍 {venueLabel}
-              </a>
+            {venueLabel && (
+              session.venue_url
+                ? <a href={session.venue_url} target="_blank" rel="noopener noreferrer" className="sv-venue-link">📍 {venueLabel}</a>
+                : <span>📍 {venueLabel}</span>
             )}
           </div>
         </div>
