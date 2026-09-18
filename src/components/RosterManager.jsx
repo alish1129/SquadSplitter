@@ -3,8 +3,6 @@ import { supabase } from '../supabaseClient.js';
 import { POSITIONS, POS_LABEL } from '../lib/teamBalancer.js';
 import { CHEM_STYLE_LIST, CHEM_CATEGORIES, CHEM_STYLES } from '../lib/chemistryStyles.js';
 
-const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
-
 // FLEX = any outfield position — incompatible with GK
 function posConflict(pos, current) {
   return (pos === 'FLEX' && current.includes('GK')) ||
@@ -82,10 +80,7 @@ export default function RosterManager({ players }) {
   const [error, setError] = useState('');
 
   const sorted = useMemo(
-    () =>
-      [...players].sort(
-        (a, b) => ORDER[a.positions[0]] - ORDER[b.positions[0]] || a.name.localeCompare(b.name)
-      ),
+    () => [...players].sort((a, b) => a.name.localeCompare(b.name)),
     [players]
   );
 

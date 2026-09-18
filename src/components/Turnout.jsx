@@ -2,17 +2,12 @@ import { useMemo, useState } from 'react';
 import { supabase } from '../supabaseClient.js';
 import { PosPill, RatingBadge, ChemStyleBadges } from './shared.jsx';
 
-const ORDER = { GK: 0, DEF: 1, MID: 2, FWD: 3, FLEX: 4 };
-
 export default function Turnout({ players, session, sessionId, isAdmin, onGenerate, generating }) {
   const [toggling, setToggling] = useState(null);
   const [error, setError] = useState('');
 
   const sorted = useMemo(
-    () =>
-      [...players].sort(
-        (a, b) => ORDER[a.positions[0]] - ORDER[b.positions[0]] || a.name.localeCompare(b.name)
-      ),
+    () => [...players].sort((a, b) => a.name.localeCompare(b.name)),
     [players]
   );
 
