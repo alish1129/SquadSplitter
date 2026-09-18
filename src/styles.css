@@ -475,7 +475,7 @@ button { font-family: inherit; cursor: pointer; }
 /* ── Main content grid ──────────────────────────────────────── */
 .main-grid {
   display: grid;
-  grid-template-columns: 5fr 7fr;
+  grid-template-columns: 7fr 5fr;
   gap: 20px;
   align-items: start;
 }

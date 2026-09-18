@@ -12,7 +12,16 @@ export default function Turnout({ players, session, sessionId, isAdmin, onGenera
   );
 
   const inCount = players.filter((p) => p.is_in).length;
+  const allIn = inCount === players.length;
   const canGenerate = inCount >= 2;
+
+  async function selectAll(value) {
+    setError('');
+    const { error: err } = await supabase
+      .from('session_turnout')
+      .upsert(players.map((p) => ({ session_id: sessionId, player_id: p.id, is_in: value })));
+    if (err) setError(err.message);
+  }
 
   async function toggle(player, nextValue) {
     setError('');
@@ -60,9 +69,19 @@ export default function Turnout({ players, session, sessionId, isAdmin, onGenera
     <div className="card">
       <div className="card-head">
         <h2>Who's in?</h2>
-        <span className="count-badge">
-          {inCount} of {players.length} IN
-        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isAdmin && (
+            <button
+              type="button"
+              className="btn secondary small"
+              onClick={() => selectAll(!allIn)}
+              aria-label={allIn ? 'Mark all players out' : 'Mark all players in'}
+            >
+              {allIn ? 'Clear all' : 'Select all'}
+            </button>
+          )}
+          <span className="count-badge">{inCount} of {players.length} IN</span>
+        </div>
       </div>
       <div className="turnout-list">
         {sorted.map((p) => {
