@@ -100,7 +100,7 @@ export default function Turnout({ players, session, sessionId, isAdmin, onGenera
               {isSelf && <span className="you-tag" aria-label="This is you">YOU</span>}
               <PosPill positions={p.positions} />
               {isAdmin && <RatingBadge rating={p.rating} />}
-              <ChemStyleBadges chemStyles={p.chemistry_styles} />
+              {isAdmin && <ChemStyleBadges chemStyles={p.chemistry_styles} />}
             </label>
           );
         })}

@@ -26,9 +26,9 @@ function TeamCard({ cls, name, ids, playersById, isAdmin }) {
             {stats.byPos[pos].map((p) => (
               <div className="team-player" key={p.id}>
                 <span>{p.name}</span>
-                {(p.chemistry_styles ?? []).length > 0 && (
+                {isAdmin && (p.chemistry_styles ?? []).length > 0 && (
                   <span className="team-player-chem">
-                    {(p.chemistry_styles).map((cs) =>
+                    {p.chemistry_styles.map((cs) =>
                       CHEM_STYLES[cs]
                         ? <span key={cs} title={`${CHEM_STYLES[cs].label}: ${CHEM_STYLES[cs].description}`}>{CHEM_STYLES[cs].emoji}</span>
                         : null
